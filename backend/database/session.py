@@ -5,7 +5,11 @@ from backend.core.config import settings
 from backend.database.models import Base
 
 # Database engine configuration
-is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+is_sqlite = db_url.startswith("sqlite")
 
 engine_kwargs = {
     "pool_pre_ping": True,
@@ -21,7 +25,7 @@ else:
     engine_kwargs["pool_timeout"] = settings.DB_POOL_TIMEOUT
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     **engine_kwargs
 )
 

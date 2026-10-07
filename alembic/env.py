@@ -17,8 +17,13 @@ from backend.database.models import Base
 # access to the values within the .ini file in use.
 config = context.config
 
+# Normalize URL (e.g. postgres:// to postgresql://)
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 # Dynamically set sqlalchemy.url from our application settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
@@ -46,9 +51,9 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     configuration = config.get_section(config.config_ini_section) or {}
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    configuration["sqlalchemy.url"] = db_url
     
-    is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+    is_sqlite = db_url.startswith("sqlite")
     connect_args = {"check_same_thread": False} if is_sqlite else {}
 
     connectable = engine_from_config(
