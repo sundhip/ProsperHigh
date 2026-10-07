@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getPortfolio, addHolding, deleteHolding } from "@/lib/api";
+import { getPortfolio, addHolding, deleteHolding, importPortfolioCSV } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { ShieldAlert, CheckCircle2, PieChart as PieIcon, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Upload, Download } from "lucide-react";
+import { ShieldAlert, CheckCircle2, PieChart as PieIcon, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Upload, Download, AlertCircle } from "lucide-react";
 
 export default function PortfolioPageV2() {
   const [portfolio, setPortfolio] = useState<any>(null);
@@ -17,6 +17,9 @@ export default function PortfolioPageV2() {
   const [quantity, setQuantity] = useState(10);
   const [price, setPrice] = useState(1000);
   const [submitting, setSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [csvSuccess, setCsvSuccess] = useState<string | null>(null);
 
   const fetchPortfolio = () => {
     setLoading(true);
@@ -35,13 +38,14 @@ export default function PortfolioPageV2() {
     e.preventDefault();
     if (!symbol.trim()) return;
     setSubmitting(true);
+    setActionError(null);
     try {
       await addHolding(symbol.trim(), quantity, price);
       setShowAddModal(false);
       setSymbol("");
       fetchPortfolio();
-    } catch (e) {
-      alert("Failed to add holding.");
+    } catch (e: any) {
+      setActionError(e.message || "Failed to add holding.");
     } finally {
       setSubmitting(false);
     }
@@ -51,44 +55,23 @@ export default function PortfolioPageV2() {
     const file = e.target.files?.[0];
     if (!file) return;
     setSubmitting(true);
+    setCsvError(null);
+    setCsvSuccess(null);
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      if (!text) {
-        setSubmitting(false);
-        return;
-      }
-      const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-      if (lines.length <= 1) {
-        setSubmitting(false);
-        return;
-      }
-
-      const headers = lines[0].toLowerCase().split(",").map((h) => h.trim());
-      const symbolIdx = headers.findIndex((h) => h.includes("symbol") || h.includes("ticker") || h.includes("stock") || h.includes("name"));
-      const qtyIdx = headers.findIndex((h) => h.includes("qty") || h.includes("quantity") || h.includes("shares") || h.includes("units"));
-      const priceIdx = headers.findIndex((h) => h.includes("price") || h.includes("cost") || h.includes("avg") || h.includes("rate"));
-
-      const sIdx = symbolIdx !== -1 ? symbolIdx : 0;
-      const qIdx = qtyIdx !== -1 ? qtyIdx : 1;
-      const pIdx = priceIdx !== -1 ? priceIdx : 2;
-
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(",").map((c) => c.trim().replace(/["']/g, ""));
-        if (cols.length > sIdx && cols[sIdx]) {
-          const sym = cols[sIdx].toUpperCase();
-          const qty = Number(cols[qIdx]) || 1;
-          const pr = Number(cols[pIdx]) || 100;
-          await addHolding(sym, qty, pr);
-        }
-      }
-
-      setShowAddModal(false);
-      setSubmitting(false);
+    try {
+      const res = await importPortfolioCSV(file);
+      setCsvSuccess(res.message || `Successfully imported ${res.imported_count} holdings.`);
       fetchPortfolio();
-    };
-    reader.readAsText(file);
+      setTimeout(() => {
+        setShowAddModal(false);
+        setCsvSuccess(null);
+      }, 1500);
+    } catch (err: any) {
+      setCsvError(err.message || "Failed to import CSV.");
+    } finally {
+      setSubmitting(false);
+      e.target.value = "";
+    }
   };
 
   const downloadSampleCSV = () => {
@@ -230,6 +213,14 @@ export default function PortfolioPageV2() {
             </div>
           </div>
 
+          {/* Stale Quote Alert if any holding is cached or using previous close */}
+          {portfolio?.has_stale_quotes && (
+            <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-center space-x-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Some market quotes are currently using cached data or previous close. Metrics update automatically with live streams.</span>
+            </div>
+          )}
+
           {/* Holdings Table */}
           <div className="prosper-card p-6 space-y-4">
             <h3 className="text-base font-bold text-charcoal font-manrope">Active Stock Holdings Table</h3>
@@ -260,7 +251,14 @@ export default function PortfolioPageV2() {
                         <td className="py-3 px-3">{h.sector}</td>
                         <td className="py-3 px-3">{h.quantity}</td>
                         <td className="py-3 px-3">₹{h.average_price}</td>
-                        <td className="py-3 px-3 font-bold text-slate-900">₹{h.current_price}</td>
+                        <td className="py-3 px-3 font-bold text-slate-900">
+                          ₹{h.current_price}
+                          {!h.quote_available && (
+                            <span className="text-[10px] text-amber-600 ml-1 font-normal" title="Live quote unavailable, cost basis used">
+                              (cost basis)
+                            </span>
+                          )}
+                        </td>
                         <td className="py-3 px-3 font-black text-charcoal">₹{h.current_value?.toLocaleString("en-IN")}</td>
                         <td className="py-3 px-3 font-bold text-slate-600">{h.portfolio_weight_pct}%</td>
                         <td className="py-3 px-3 text-right">
@@ -309,6 +307,13 @@ export default function PortfolioPageV2() {
 
             {modalTab === "manual" ? (
               <form onSubmit={handleAddHolding} className="space-y-4">
+                {actionError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{actionError}</span>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-xs font-bold text-slate-600 uppercase">Stock Symbol</label>
                   <input
@@ -352,6 +357,19 @@ export default function PortfolioPageV2() {
               </form>
             ) : (
               <div className="space-y-4">
+                {csvError && (
+                  <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{csvError}</span>
+                  </div>
+                )}
+                {csvSuccess && (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-lg flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{csvSuccess}</span>
+                  </div>
+                )}
+
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-charcoal">CSV Format: Symbol, Quantity, Price</span>
@@ -362,9 +380,18 @@ export default function PortfolioPageV2() {
                   </div>
 
                   <label className="flex flex-col items-center justify-center space-y-2 border-2 border-dashed border-primary/40 hover:border-primary bg-white p-6 rounded-xl cursor-pointer transition-all">
-                    <Upload className="w-6 h-6 text-primary" />
-                    <span className="text-xs font-bold text-primary">Upload CSV File to Import Holdings</span>
-                    <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+                    {submitting ? (
+                      <div className="flex flex-col items-center space-y-2 py-2">
+                        <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+                        <span className="text-xs font-bold text-primary">Importing and validating rows atomically...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-primary" />
+                        <span className="text-xs font-bold text-primary">Upload CSV File to Import Holdings</span>
+                        <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+                      </>
+                    )}
                   </label>
                 </div>
 

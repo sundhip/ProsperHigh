@@ -1,139 +1,122 @@
 import os
 import sys
-from typing import Dict, Any, Optional, List
+from contextlib import asynccontextmanager
+from typing import Dict, Any
 
+# Ensure project root is on Python sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, Query, HTTPException, Body
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from backend.services.auth_service import auth_service
-from backend.services.profile_engine import profile_engine
-from backend.services.analytics_engine import analytics_engine
-from backend.services.portfolio_service import portfolio_service
-from backend.services.market_provider import market_provider
-from backend.services.rag_service import rag_service
-from backend.orchestrator.orchestrator import orchestrator
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+from backend.core.config import settings
+from backend.core.logging import setup_logging, logger
+from backend.database.session import check_database_connection, init_db
+
+# Routers
+from backend.api.routers import (
+    health,
+    auth,
+    profile,
+    portfolio,
+    stocks,
+    analysis,
+    research,
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    setup_logging()
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION} [{settings.ENVIRONMENT}]")
+    db_connected = check_database_connection()
+    if db_connected:
+        logger.info("Database connection established successfully.")
+    else:
+        logger.warning("Database connection failed or not yet initialized.")
+        try:
+            init_db()
+            logger.info("Database tables initialized.")
+        except Exception as e:
+            logger.error(f"Error initializing database: {e}")
+    yield
+    # Shutdown
+    logger.info(f"Shutting down {settings.APP_NAME}")
+
 
 app = FastAPI(
-    title="ProsperHigh Platform API v3",
-    description="Dynamic User-Driven Multi-Agent Investment Intelligence System",
-    version="3.0.0"
+    title=settings.APP_NAME,
+    description="Explainable Multi-Agent Investment Intelligence Platform API",
+    version=settings.APP_VERSION,
+    lifespan=lifespan
 )
+
+# 1. Environment-based CORS Configuration
+origins = settings.ALLOWED_ORIGINS
+if isinstance(origins, str):
+    origins = [origins]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
-@app.get("/api/health")
-def health_check():
-    return {
-        "status": "online",
-        "app": "ProsperHigh Platform API v3",
-        "tagline": "Understand your investments. Understand why."
-    }
 
-# 1. AUTHENTICATION ROUTES
-@app.post("/api/auth/register")
-def register(payload: Dict[str, Any] = Body(...)):
-    name = payload.get("name", "")
-    email = payload.get("email", "")
-    password = payload.get("password", "")
-    if not name or not email or not password:
-        raise HTTPException(status_code=400, detail="Name, email, and password are required.")
-    res = auth_service.register_user(name, email, password)
-    if not res.get("success"):
-        raise HTTPException(status_code=400, detail=res.get("error"))
-    return res
+# 2. Security Headers Middleware
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
-@app.post("/api/auth/login")
-def login(payload: Dict[str, Any] = Body(...)):
-    email = payload.get("email", "")
-    password = payload.get("password", "")
-    res = auth_service.login_user(email, password)
-    if not res.get("success"):
-        raise HTTPException(status_code=401, detail=res.get("error"))
-    return res
 
-# 2. 10-STEP INVESTOR PROFILE & FINANCIAL CONTEXT
-@app.get("/api/profile/{user_id}")
-def get_profile(user_id: str):
-    return profile_engine.get_full_profile(user_id)
+# 3. Structured Error Handlers
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "status_code": exc.status_code
+        },
+        headers=exc.headers
+    )
 
-@app.post("/api/profile/onboarding")
-def save_onboarding(payload: Dict[str, Any] = Body(...)):
-    user_id = payload.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=400, detail="User ID is required.")
-    profile_data = payload.get("profile", {})
-    financial_data = payload.get("financial", {})
-    holdings = payload.get("holdings", [])
-    
-    # Save Investor & Financial Profile
-    res = profile_engine.save_full_profile(user_id, profile_data, financial_data)
-    
-    # Save Initial Portfolio Holdings if provided
-    if holdings:
-        for h in holdings:
-            sym = h.get("symbol", "")
-            qty = int(h.get("quantity", 1))
-            price = float(h.get("price", 100.0))
-            if sym:
-                portfolio_service.add_holding(user_id, sym, qty, price)
-                
-    return res
 
-# 3. DYNAMIC PORTFOLIO CALCULATOR
-@app.get("/api/portfolio/{user_id}")
-def get_portfolio(user_id: str):
-    user_port = portfolio_service.get_user_portfolio(user_id)
-    user_prof = profile_engine.get_full_profile(user_id)
-    max_limit = user_prof.get("max_stock_exposure_pct", 25.0)
-    
-    # Run deterministic formula calculations
-    metrics = analytics_engine.calculate_portfolio_metrics(user_port.get("holdings", []), max_limit)
-    metrics["user_id"] = user_id
-    metrics["onboarding_completed"] = user_prof.get("onboarding_completed", False)
-    return metrics
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for err in exc.errors():
+        loc = " -> ".join(str(l) for l in err.get("loc", []))
+        errors.append({
+            "location": loc,
+            "message": err.get("msg"),
+            "type": err.get("type")
+        })
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": "Request validation failed.",
+            "status_code": 422,
+            "validation_errors": errors
+        }
+    )
 
-@app.post("/api/portfolio/holding")
-def add_holding(payload: Dict[str, Any] = Body(...)):
-    user_id = payload.get("user_id")
-    symbol = payload.get("symbol")
-    quantity = int(payload.get("quantity", 1))
-    price = float(payload.get("average_price", 100.0))
-    if not user_id or not symbol:
-        raise HTTPException(status_code=400, detail="User ID and Symbol are required.")
-    portfolio_service.add_holding(user_id, symbol, quantity, price)
-    return get_portfolio(user_id)
 
-@app.delete("/api/portfolio/holding/{user_id}/{holding_id}")
-def delete_holding(user_id: str, holding_id: int):
-    portfolio_service.delete_holding(user_id, holding_id)
-    return get_portfolio(user_id)
-
-# 4. DYNAMIC MARKET DATA & STOCK SEARCH
-@app.get("/api/market/ticker")
-def get_live_ticker():
-    return {"ticker": market_provider.get_popular_universe()}
-
-@app.get("/api/stocks/search")
-def search_stocks(q: str = Query("", description="Stock search query")):
-    return {"stocks": market_provider.search_symbol(q)}
-
-# 5. MULTI-AGENT INTELLIGENCE ANALYSIS
-@app.post("/api/analyze")
-def analyze(payload: Dict[str, Any] = Body(...)):
-    symbol = payload.get("symbol", "RELIANCE")
-    user_id = payload.get("user_id", "U001")
-    return orchestrator.analyze_stock(symbol, user_id)
-
-# 6. RAG RESEARCH TERMINAL
-@app.post("/api/research/ask")
-def research(payload: Dict[str, Any] = Body(...)):
-    symbol = payload.get("symbol", "RELIANCE")
-    query = payload.get("query", "regulatory risk and capex")
-    return rag_service.query_filings(symbol, query)
+# 4. Mount API Routers
+app.include_router(health.router)
+app.include_router(auth.router)
+app.include_router(profile.router)
+app.include_router(portfolio.router)
+app.include_router(stocks.router)
+app.include_router(analysis.router)
+app.include_router(research.router)

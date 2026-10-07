@@ -61,14 +61,13 @@ export default function HomePageV3() {
   const hasLocalProfile = typeof window !== "undefined" && localStorage.getItem("prosperhigh_local_profile") !== null;
   const isProfileComplete = profile?.onboarding_completed || user?.hasCompletedOnboarding || hasLocalProfile;
 
-  const perfData = [
-    { date: "Jan", value: portfolio?.total_invested_amount || 100000 },
-    { date: "Feb", value: (portfolio?.total_invested_amount || 100000) * 1.02 },
-    { date: "Mar", value: (portfolio?.total_invested_amount || 100000) * 1.01 },
-    { date: "Apr", value: (portfolio?.total_invested_amount || 100000) * 1.05 },
-    { date: "May", value: (portfolio?.total_invested_amount || 100000) * 1.08 },
-    { date: "Jun", value: portfolio?.total_portfolio_value || 112000 }
-  ];
+  const hasHoldings = (portfolio?.holdings?.length || 0) > 0;
+  const perfData = hasHoldings
+    ? portfolio.holdings.map((h: any) => ({
+        date: h.symbol,
+        value: h.current_value ?? (h.quantity * h.current_price)
+      }))
+    : [];
 
   const COLORS = ["#1F3A4A", "#4F7C7A", "#C9A96E", "#4F8A68", "#C58B39"];
 
@@ -279,26 +278,35 @@ export default function HomePageV3() {
         <div className="lg:col-span-2 prosper-card p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-base font-bold text-charcoal font-manrope">Calculated Portfolio Trajectory</h3>
-              <p className="text-xs text-slate-500">Formulas calculated from your {portfolio?.holdings_count || 0} active holdings.</p>
+              <h3 className="text-base font-bold text-charcoal font-manrope">Current Holdings Valuation</h3>
+              <p className="text-xs text-slate-500">Calculated from market data for your {portfolio?.holdings_count || 0} active positions.</p>
             </div>
           </div>
 
           <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={perfData}>
-                <defs>
-                  <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1F3A4A" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#1F3A4A" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="date" stroke="#94A3B8" fontSize={11} />
-                <YAxis stroke="#94A3B8" fontSize={11} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, "Value"]} />
-                <Area type="monotone" dataKey="value" stroke="#1F3A4A" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVal)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {!hasHoldings ? (
+              <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400 font-bold space-y-2 border border-dashed border-slate-200 rounded-xl p-6">
+                <span>No stock holdings recorded yet.</span>
+                <Link href="/portfolio" className="text-primary hover:underline font-extrabold">
+                  + Add holdings to view valuation breakdown &rarr;
+                </Link>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={perfData}>
+                  <defs>
+                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1F3A4A" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#1F3A4A" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="date" stroke="#94A3B8" fontSize={11} />
+                  <YAxis stroke="#94A3B8" fontSize={11} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, "Position Value"]} />
+                  <Area type="monotone" dataKey="value" stroke="#1F3A4A" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVal)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 

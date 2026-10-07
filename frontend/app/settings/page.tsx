@@ -166,11 +166,11 @@ export default function SettingsPageV2() {
         <div className="prosper-card p-6 space-y-4">
           <div>
             <label className="text-xs font-bold text-slate-600 uppercase">Full Name</label>
-            <input type="text" value={getStoredUser()?.name || "Rohith Kumar"} readOnly className="w-full bg-slate-50 border rounded-xl p-2.5 text-xs font-bold text-charcoal mt-1" />
+            <input type="text" value={getStoredUser()?.name || "Not signed in"} readOnly className="w-full bg-slate-50 border rounded-xl p-2.5 text-xs font-bold text-charcoal mt-1" />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-600 uppercase">Email Address</label>
-            <input type="email" value={getStoredUser()?.email || "rohith@example.com"} readOnly className="w-full bg-slate-50 border rounded-xl p-2.5 text-xs font-bold text-charcoal mt-1" />
+            <input type="email" value={getStoredUser()?.email || "—"} readOnly className="w-full bg-slate-50 border rounded-xl p-2.5 text-xs font-bold text-charcoal mt-1" />
           </div>
         </div>
       )}

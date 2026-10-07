@@ -28,10 +28,12 @@ function AnalyzeContentV3() {
   const [loadingStep, setLoadingStep] = useState(1);
   const [showMultiAgentDetails, setShowMultiAgentDetails] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAnalysisData = (sym: string) => {
     setLoading(true);
     setLoadingStep(1);
+    setError(null);
 
     const stepTimer = setInterval(() => {
       setLoadingStep((prev) => {
@@ -41,16 +43,21 @@ function AnalyzeContentV3() {
         }
         return prev + 1;
       });
-    }, 400);
+    }, 250);
 
     const user = getStoredUser();
-    const uid = user?.id || "U001";
-    analyzeStock(sym, uid).then((res) => {
-      setTimeout(() => {
+    analyzeStock(sym, user?.id)
+      .then((res) => {
+        clearInterval(stepTimer);
         setAnalysis(res);
         setLoading(false);
-      }, 2200);
-    });
+      })
+      .catch((err: any) => {
+        clearInterval(stepTimer);
+        setAnalysis(null);
+        setError(err.message || "Failed to execute multi-agent analysis.");
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -170,6 +177,20 @@ function AnalyzeContentV3() {
             </div>
           </div>
         </div>
+      ) : error ? (
+        <div className="prosper-card p-8 bg-red-50/80 border border-red-200 text-red-900 rounded-2xl space-y-3">
+          <div className="flex items-center space-x-2.5 font-bold text-base">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+            <span>Analysis Execution Halted</span>
+          </div>
+          <p className="text-xs text-red-700 leading-relaxed font-medium">{error}</p>
+          <button
+            onClick={() => fetchAnalysisData(symbol)}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all"
+          >
+            Retry Analysis
+          </button>
+        </div>
       ) : analysis ? (
         <>
           {/* 3. Top-Level Clean Suitability Decision */}
@@ -182,6 +203,27 @@ function AnalyzeContentV3() {
             explanation={analysis.explanation}
             llmProvider={analysis.llm_provider}
           />
+
+          {/* Warnings & Uncertainty Callout */}
+          {((analysis.warnings && analysis.warnings.length > 0) || analysis.uncertainty) && (
+            <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1.5 text-xs text-amber-900">
+              <div className="flex items-center space-x-2 font-bold text-amber-800">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Synthesis Warnings & Model Uncertainty</span>
+              </div>
+              {analysis.uncertainty && (
+                <p className="text-[11px] text-amber-800 font-medium">
+                  <strong>Uncertainty Profile:</strong> {analysis.uncertainty}
+                </p>
+              )}
+              {analysis.warnings?.map((w: string, idx: number) => (
+                <div key={idx} className="text-[11px] text-amber-700 flex items-center space-x-1">
+                  <span>•</span>
+                  <span>{w}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* 4. Personalized Portfolio Fit */}
           <div className="prosper-card p-6 border-l-4 border-l-primary bg-slate-50">

@@ -1,71 +1,109 @@
-import hashlib
 import uuid
-import secrets
 from typing import Dict, Any, Optional
-from backend.database.models import get_db
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+
+from backend.database.models import User, InvestorProfile, FinancialProfile
+from backend.core.security import hash_password, verify_password, create_access_token
+
 
 class AuthService:
-    def hash_password(self, password: str) -> str:
-        return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-    def register_user(self, name: str, email: str, password: str) -> Dict[str, Any]:
+    def register_user(self, db: Session, name: str, email: str, password: str) -> Dict[str, Any]:
         email_clean = email.strip().lower()
-        conn = get_db()
-        cursor = conn.cursor()
         
-        cursor.execute("SELECT id FROM users WHERE email = ?", (email_clean,))
-        if cursor.fetchone():
-            conn.close()
-            return {"success": False, "error": "An account with this email address already exists."}
+        # Check duplicate email
+        existing = db.query(User).filter(User.email == email_clean).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this email address already exists."
+            )
             
-        user_id = "USR-" + secrets.token_hex(4).upper()
-        password_hash = self.hash_password(password)
+        user_id = f"USR-{uuid.uuid4().hex[:8].upper()}"
+        pwd_hash = hash_password(password)
         
-        cursor.execute(
-            "INSERT INTO users (id, name, email, password_hash) VALUES (?, ?, ?, ?)",
-            (user_id, name, email_clean, password_hash)
+        new_user = User(
+            id=user_id,
+            name=name.strip(),
+            email=email_clean,
+            password_hash=pwd_hash,
+            is_active=True
         )
+        db.add(new_user)
         
-        # Create default empty profile
-        cursor.execute(
-            "INSERT INTO investor_profiles (user_id, risk_score, risk_category) VALUES (?, 50, 'Moderate')",
-            (user_id,)
+        # Create default empty investor profile
+        default_profile = InvestorProfile(
+            user_id=user_id,
+            risk_score=50,
+            risk_category="Balanced Growth",
+            onboarding_completed=False
         )
+        db.add(default_profile)
         
-        conn.commit()
-        conn.close()
+        default_financial = FinancialProfile(
+            user_id=user_id
+        )
+        db.add(default_financial)
+        
+        db.commit()
+        db.refresh(new_user)
+        
+        token = create_access_token(
+            subject=user_id,
+            extra_claims={"email": email_clean, "name": new_user.name}
+        )
         
         return {
             "success": True,
             "user": {
-                "id": user_id,
-                "name": name,
-                "email": email_clean,
-                "token": "PH-TOKEN-" + secrets.token_hex(16)
-            }
+                "id": new_user.id,
+                "name": new_user.name,
+                "email": new_user.email,
+                "token": token,
+                "hasCompletedOnboarding": False
+            },
+            "token": token,
+            "token_type": "bearer"
         }
 
-    def login_user(self, email: str, password: str) -> Dict[str, Any]:
+    def login_user(self, db: Session, email: str, password: str) -> Dict[str, Any]:
         email_clean = email.strip().lower()
-        password_hash = self.hash_password(password)
+        user = db.query(User).filter(User.email == email_clean).first()
         
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email_clean,))
-        row = cursor.fetchone()
-        conn.close()
-        
-        if not row or row["password_hash"] != password_hash:
-            return {"success": False, "error": "Invalid email address or password."}
+        if not user or not verify_password(password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email address or password.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
             
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is deactivated."
+            )
+            
+        has_completed = False
+        if user.investor_profile:
+            has_completed = user.investor_profile.onboarding_completed
+            
+        token = create_access_token(
+            subject=user.id,
+            extra_claims={"email": user.email, "name": user.name}
+        )
+        
         return {
             "success": True,
             "user": {
-                "id": row["id"],
-                "name": row["name"],
-                "email": row["email"],
-                "token": "PH-TOKEN-" + secrets.token_hex(16)
-            }
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "token": token,
+                "hasCompletedOnboarding": has_completed
+            },
+            "token": token,
+            "token_type": "bearer"
         }
+
 
 auth_service = AuthService()

@@ -18,6 +18,22 @@ export function getStoredUser(): UserSession | null {
   }
 }
 
+export function getAuthToken(): string | null {
+  const user = getStoredUser();
+  return user?.token || null;
+}
+
+export function getAuthHeaders(): HeadersInit {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export function setStoredUser(user: UserSession): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(AUTH_KEY, JSON.stringify(user));
@@ -27,8 +43,6 @@ export function setStoredUser(user: UserSession): void {
 export function clearStoredUser(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem("prosperhigh_local_profile");
-  localStorage.removeItem("prosperhigh_local_holdings");
   window.dispatchEvent(new Event("auth-changed"));
 }
 

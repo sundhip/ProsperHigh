@@ -1,117 +1,222 @@
-import json
-import sqlite3
-import os
-import tempfile
-from typing import Dict, Any, Optional, List
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional, Any
+from sqlalchemy import (
+    String, Integer, Float, Boolean, Text, DateTime, JSON, ForeignKey, func, Enum
+)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-# Check if running in Vercel or read-only serverless environment
-is_vercel = bool(os.environ.get("VERCEL"))
-if is_vercel:
-    DB_PATH = os.path.join(tempfile.gettempdir(), "prosperhigh.db")
-else:
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database", "prosperhigh.db")
 
-def get_db():
-    try:
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
-    except Exception:
-        fallback_path = os.path.join(tempfile.gettempdir(), "prosperhigh.db")
-        conn = sqlite3.connect(fallback_path)
+class Base(DeclarativeBase):
+    pass
 
-    conn.row_factory = sqlite3.Row
-    return conn
 
-def init_db():
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
+class User(Base):
+    __tablename__ = "users"
 
-        # 1. Users Table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: f"USR-{uuid.uuid4().hex[:8].upper()}")
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-        # 2. Investor Profiles Table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS investor_profiles (
-            user_id TEXT PRIMARY KEY,
-            country TEXT DEFAULT 'India',
-            currency TEXT DEFAULT 'INR',
-            market_preference TEXT DEFAULT 'NSE',
-            experience_level TEXT DEFAULT 'Learning Investor',
-            past_assets TEXT DEFAULT '[]',
-            primary_goals TEXT DEFAULT '[]',
-            primary_goal_top TEXT DEFAULT 'Wealth Growth',
-            investment_horizon TEXT DEFAULT '3–5 Years',
-            loss_reaction TEXT DEFAULT 'Wait and monitor',
-            volatility_comfort INTEGER DEFAULT 50,
-            risk_score INTEGER DEFAULT 58,
-            risk_category TEXT DEFAULT 'Balanced Growth',
-            explanation_style TEXT DEFAULT 'Standard',
-            max_stock_exposure_pct REAL DEFAULT 20.0,
-            avoided_sectors TEXT DEFAULT '[]',
-            onboarding_completed BOOLEAN DEFAULT 0,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
+    # Relationships
+    investor_profile: Mapped[Optional["InvestorProfile"]] = relationship(
+        "InvestorProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    financial_profile: Mapped[Optional["FinancialProfile"]] = relationship(
+        "FinancialProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    portfolios: Mapped[List["Portfolio"]] = relationship(
+        "Portfolio", back_populates="user", cascade="all, delete-orphan"
+    )
+    holdings: Mapped[List["Holding"]] = relationship(
+        "Holding", back_populates="user", cascade="all, delete-orphan"
+    )
+    transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction", back_populates="user", cascade="all, delete-orphan"
+    )
+    analyses: Mapped[List["AnalysisHistory"]] = relationship(
+        "AnalysisHistory", back_populates="user", cascade="all, delete-orphan"
+    )
 
-        # 3. Financial Context Profiles Table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS financial_profiles (
-            user_id TEXT PRIMARY KEY,
-            planned_investment TEXT DEFAULT '₹25,000 – ₹1 Lakh',
-            current_invested TEXT DEFAULT '₹25,000',
-            monthly_capacity TEXT DEFAULT '₹5,000 – ₹15,000',
-            emergency_savings TEXT DEFAULT 'Yes',
-            financial_obligations TEXT DEFAULT '[]',
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
 
-        # 4. Portfolios & Holdings Table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS holdings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            symbol TEXT NOT NULL,
-            name TEXT,
-            sector TEXT,
-            quantity INTEGER NOT NULL,
-            average_price REAL NOT NULL,
-            purchase_date TEXT DEFAULT CURRENT_TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
+class InvestorProfile(Base):
+    __tablename__ = "investor_profiles"
 
-        # 5. Analysis History Table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS analyses (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL,
-            symbol TEXT NOT NULL,
-            final_decision TEXT NOT NULL,
-            confidence INTEGER NOT NULL,
-            net_score INTEGER NOT NULL,
-            summary TEXT,
-            full_json TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    country: Mapped[str] = mapped_column(String(50), default="India", nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
+    market_preference: Mapped[str] = mapped_column(String(50), default="NSE", nullable=False)
+    experience_level: Mapped[str] = mapped_column(String(50), default="Learning Investor", nullable=False)
+    past_assets: Mapped[Any] = mapped_column(JSON, default=list, nullable=False)
+    primary_goals: Mapped[Any] = mapped_column(JSON, default=list, nullable=False)
+    primary_goal_top: Mapped[str] = mapped_column(String(100), default="Wealth Growth", nullable=False)
+    investment_horizon: Mapped[str] = mapped_column(String(50), default="3–5 Years", nullable=False)
+    loss_reaction: Mapped[str] = mapped_column(String(50), default="Wait and monitor", nullable=False)
+    volatility_comfort: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
+    risk_score: Mapped[int] = mapped_column(Integer, default=58, nullable=False)
+    risk_category: Mapped[str] = mapped_column(String(50), default="Balanced Growth", nullable=False)
+    explanation_style: Mapped[str] = mapped_column(String(50), default="Standard", nullable=False)
+    max_stock_exposure_pct: Mapped[float] = mapped_column(Float, default=20.0, nullable=False)
+    avoided_sectors: Mapped[Any] = mapped_column(JSON, default=list, nullable=False)
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print("Database initialization notice:", e)
+    user: Mapped["User"] = relationship("User", back_populates="investor_profile")
 
-init_db()
+
+class FinancialProfile(Base):
+    __tablename__ = "financial_profiles"
+
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    planned_investment: Mapped[str] = mapped_column(String(50), default="₹25,000 – ₹1 Lakh", nullable=False)
+    current_invested: Mapped[str] = mapped_column(String(50), default="₹25,000", nullable=False)
+    monthly_capacity: Mapped[str] = mapped_column(String(50), default="₹5,000 – ₹15,000", nullable=False)
+    emergency_savings: Mapped[str] = mapped_column(String(20), default="Yes", nullable=False)
+    financial_obligations: Mapped[Any] = mapped_column(JSON, default=list, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="financial_profile")
+
+
+class Security(Base):
+    __tablename__ = "securities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    symbol: Mapped[str] = mapped_column(String(30), unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    exchange: Mapped[str] = mapped_column(String(20), default="NSE", nullable=False)
+    sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    asset_class: Mapped[str] = mapped_column(String(50), default="Equity", nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class Portfolio(Base):
+    __tablename__ = "portfolios"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: f"PORT-{uuid.uuid4().hex[:8].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), default="Main Portfolio", nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="portfolios")
+    holdings: Mapped[List["Holding"]] = relationship("Holding", back_populates="portfolio", cascade="all, delete-orphan")
+    transactions: Mapped[List["Transaction"]] = relationship("Transaction", back_populates="portfolio", cascade="all, delete-orphan")
+
+
+class Holding(Base):
+    __tablename__ = "holdings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    portfolio_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("portfolios.id", ondelete="CASCADE"), index=True, nullable=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)
+    average_price: Mapped[float] = mapped_column(Float, nullable=False)  # Cost basis per unit
+    security_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("securities.id", ondelete="SET NULL"), nullable=True)
+    purchase_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="holdings")
+    portfolio: Mapped[Optional["Portfolio"]] = relationship("Portfolio", back_populates="holdings")
+    security: Mapped[Optional["Security"]] = relationship("Security")
+
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: f"TXN-{uuid.uuid4().hex[:10].upper()}")
+    portfolio_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("portfolios.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    transaction_type: Mapped[str] = mapped_column(String(20), default="BUY", nullable=False)  # BUY, SELL, DIVIDEND
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    fees: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    total_amount: Mapped[float] = mapped_column(Float, nullable=False)  # quantity * price (+/- fees)
+    executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="transactions")
+    portfolio: Mapped["Portfolio"] = relationship("Portfolio", back_populates="transactions")
+
+
+class AnalysisHistory(Base):
+    __tablename__ = "analyses"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"ANL-{uuid.uuid4().hex[:12].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="SUCCESS", nullable=False)
+    final_decision: Mapped[str] = mapped_column(String(50), nullable=False)
+    confidence: Mapped[int] = mapped_column(Integer, nullable=False)
+    net_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    conflict_level: Mapped[str] = mapped_column(String(32), default="LOW", nullable=False)
+    model_provider: Mapped[str] = mapped_column(String(64), default="deterministic", nullable=False)
+    execution_time_ms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    full_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="analyses")
+    agent_runs: Mapped[List["AgentRun"]] = relationship("AgentRun", back_populates="analysis", cascade="all, delete-orphan")
+
+
+AnalysisRun = AnalysisHistory
+
+
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"AGR-{uuid.uuid4().hex[:12].upper()}")
+    analysis_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("analyses.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    agent_name: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="SUCCESS", nullable=False)
+    signal: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    confidence: Mapped[float] = mapped_column(Float, default=0.8, nullable=False)
+    impact_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    findings_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    evidence_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    warnings_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    model_used: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    execution_time_ms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    analysis: Mapped["AnalysisHistory"] = relationship("AnalysisHistory", back_populates="agent_runs")
+

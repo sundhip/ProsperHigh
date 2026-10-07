@@ -1,38 +1,22 @@
-import os
+"""Backward-compatibility module forwarding to backend.core.config.settings"""
+from backend.core.config import settings
 
-# ProsperHigh AI & System Configuration
+PRIMARY_LLM_PROVIDER = settings.PRIMARY_LLM_PROVIDER
+SECONDARY_LLM_PROVIDER = settings.SECONDARY_LLM_PROVIDER
+FALLBACK_LLM_PROVIDER = settings.FALLBACK_LLM_PROVIDER
 
-# Model Router Priorities
-PRIMARY_LLM_PROVIDER = os.getenv("PRIMARY_LLM_PROVIDER", "gemini")
-SECONDARY_LLM_PROVIDER = os.getenv("SECONDARY_LLM_PROVIDER", "groq")
-FALLBACK_LLM_PROVIDER = os.getenv("FALLBACK_LLM_PROVIDER", "local_qwen")
+GEMINI_API_KEY = settings.GEMINI_API_KEY
+GROQ_API_KEY = settings.GROQ_API_KEY
+OPENROUTER_API_KEY = settings.OPENROUTER_API_KEY
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+RSI_PERIOD = settings.RSI_PERIOD
+MACD_FAST = settings.MACD_FAST
+MACD_SLOW = settings.MACD_SLOW
+MACD_SIGNAL = settings.MACD_SIGNAL
+SMA_SHORT = settings.SMA_SHORT
+SMA_MEDIUM = settings.SMA_MEDIUM
+SMA_LONG = settings.SMA_LONG
 
-# Technical Analysis Settings
-RSI_PERIOD = 14
-MACD_FAST = 12
-MACD_SLOW = 26
-MACD_SIGNAL = 9
-SMA_SHORT = 20
-SMA_MEDIUM = 50
-SMA_LONG = 200
-
-# Personalization Concentration Thresholds
-HIGH_CONCENTRATION_THRESHOLD = 0.20  # 20% portfolio or sector exposure is high
-VERY_HIGH_CONCENTRATION_THRESHOLD = 0.30  # 30% is very high concentration
-
-# Banned Financial Phrases (Constraint 4 Discipline Linter)
-BANNED_PHRASES = [
-    "guaranteed profit",
-    "guaranteed return",
-    "guaranteed returns",
-    "100% safe",
-    "zero risk",
-    "will definitely increase",
-    "certain profit",
-    "risk-free investment",
-    "sure shot buy"
-]
+HIGH_CONCENTRATION_THRESHOLD = settings.HIGH_CONCENTRATION_THRESHOLD
+VERY_HIGH_CONCENTRATION_THRESHOLD = settings.VERY_HIGH_CONCENTRATION_THRESHOLD
+BANNED_PHRASES = settings.BANNED_PHRASES

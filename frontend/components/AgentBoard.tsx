@@ -39,10 +39,17 @@ export const AgentBoard: React.FC<Props> = ({ agents, onSelectAgent }) => {
     risk: "Risk & Personalization",
   };
 
-  const getSignalBadge = (signal: string) => {
-    if (signal === "BUY") return "bg-positive/15 text-positive border-positive/30";
-    if (signal === "HOLD") return "bg-warning/15 text-warning border-warning/30";
-    return "bg-negative/15 text-negative border-negative/30";
+  const getBadge = (agent: AgentResult) => {
+    if (agent.status === "FAILED") {
+      return { text: "FAILED", style: "bg-red-100 text-red-700 border-red-300" };
+    }
+    if (agent.status === "INSUFFICIENT_DATA") {
+      return { text: "NO DATA", style: "bg-slate-100 text-slate-600 border-slate-300" };
+    }
+    if (agent.signal === "BUY") return { text: "BUY", style: "bg-positive/15 text-positive border-positive/30" };
+    if (agent.signal === "HOLD") return { text: "HOLD", style: "bg-warning/15 text-warning border-warning/30" };
+    if (agent.signal === "AVOID" || agent.signal === "SELL") return { text: agent.signal, style: "bg-negative/15 text-negative border-negative/30" };
+    return { text: agent.signal || "NEUTRAL", style: "bg-slate-100 text-slate-600 border-slate-300" };
   };
 
   return (
@@ -62,6 +69,7 @@ export const AgentBoard: React.FC<Props> = ({ agents, onSelectAgent }) => {
           const Icon = agentIcons[key] || Activity;
           const label = agentLabels[key] || key;
           const score = agent.impact_score || 0;
+          const badge = getBadge(agent);
 
           return (
             <div
@@ -78,8 +86,8 @@ export const AgentBoard: React.FC<Props> = ({ agents, onSelectAgent }) => {
                     <span className="text-xs font-bold text-charcoal group-hover:text-primary">{label}</span>
                   </div>
 
-                  <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-md border ${getSignalBadge(agent.signal)}`}>
-                    {agent.signal}
+                  <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-md border ${badge.style}`}>
+                    {badge.text}
                   </span>
                 </div>
 

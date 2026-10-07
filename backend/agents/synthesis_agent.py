@@ -1,129 +1,193 @@
-from typing import Dict, Any, List
-from backend.services.ai_router import ai_router
+import time
+import json
+from datetime import datetime
+from typing import Dict, Any, List, Optional
+
+from backend.schemas.agent_contracts import (
+    AgentOutput,
+    AgentStatus,
+    SignalType,
+    EvidenceItem,
+    ConflictReport,
+    SynthesisOutput
+)
 from backend.services.conflict_service import conflict_service
-from backend.services.data_service import data_service
+from backend.services.ai_provider.service import ai_provider_service
+from backend.services.ai_provider.base import ModelRequest
+
 
 class SynthesisAgent:
-    def synthesize(self, symbol: str, user_id: str, agent_outputs: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-        user = data_service.get_user_profile(user_id)
-        stock_data = data_service.get_stock_market_data(symbol) or {}
-        
-        # 1. Sum signed impact scores
-        net_score = 0
-        all_positives = []
-        all_negatives = []
-        agent_scores = {}
-        
-        for agent_name, output in agent_outputs.items():
-            score = output.get("impact_score", 0)
-            net_score += score
-            agent_scores[agent_name] = score
-            all_positives.extend(output.get("positive_factors", []))
-            all_negatives.extend(output.get("negative_factors", []))
-            
-        # 2. Determine Final Decision (BUY / HOLD / AVOID)
+    """
+    Synthesis Agent: High-level reasoning and multi-agent evidence aggregator.
+    Consumes structured domain agent outputs, identifies consensus and conflicts,
+    synthesizes a thesis, and clearly distinguishes:
+    Evidence | Interpretation | Conclusion | Uncertainty.
+    """
+
+    def synthesize(
+        self,
+        symbol: str,
+        user_id: Optional[str],
+        agent_outputs: Dict[str, AgentOutput]
+    ) -> SynthesisOutput:
+        start_time = time.time()
+        warnings: List[str] = []
+
+        # 1. Inspect valid vs failed/insufficient data agents
+        valid_agents = {}
+        missing_agents = []
+        failed_agents = []
+
+        for name, output in agent_outputs.items():
+            if output.status == AgentStatus.SUCCESS:
+                valid_agents[name] = output
+            elif output.status == AgentStatus.INSUFFICIENT_DATA:
+                missing_agents.append(name)
+                warnings.append(f"Agent '{name}' reported insufficient underlying data.")
+            else:
+                failed_agents.append(name)
+                warnings.append(f"Agent '{name}' encountered an execution failure.")
+
+        # Determine overall analysis status
+        if len(valid_agents) == 0:
+            overall_status = AgentStatus.FAILED
+        elif missing_agents or failed_agents:
+            overall_status = AgentStatus.PARTIAL
+        else:
+            overall_status = AgentStatus.SUCCESS
+
+        # 2. Extract signals and run Conflict Detection
+        signals_map = {}
+        for name, output in valid_agents.items():
+            signals_map[name] = output.signal.value
+
+        raw_conflict = conflict_service.detect_conflicts(
+            {name: {"signal": s} for name, s in signals_map.items()}
+        )
+        conflict_report = ConflictReport(
+            conflict_level=raw_conflict.get("conflict_level", "LOW"),
+            badge=raw_conflict.get("badge", "Agreement"),
+            summary=raw_conflict.get("summary", "Signals aligned."),
+            disagreements=raw_conflict.get("disagreements", []),
+            signals_breakdown=signals_map
+        )
+
+        # 3. Sum net impact scores and derive decision
+        net_score = sum(agent.impact_score for agent in valid_agents.values())
         if net_score >= 12:
-            final_decision = "BUY"
-        elif net_score >= -5:
-            final_decision = "HOLD"
+            final_decision = SignalType.BUY
+        elif net_score >= -4:
+            final_decision = SignalType.HOLD
         else:
-            final_decision = "AVOID"
-            
-        # 3. Compute Confidence Score (0-100%)
-        # Base confidence from data availability & agent agreement
-        conflict_res = conflict_service.detect_conflicts(agent_outputs)
-        conflict_level = conflict_res.get("conflict_level", "LOW")
-        
-        base_confidence = 88
-        if conflict_level == "HIGH":
-            base_confidence -= 15
-        elif conflict_level == "MODERATE":
-            base_confidence -= 8
-            
-        # 4. Find Biggest Decision Factor
-        biggest_factor_agent = min(agent_scores, key=lambda k: agent_scores[k]) if agent_scores else "risk"
-        biggest_factor_score = agent_scores.get(biggest_factor_agent, 0)
-        
-        risk_output = agent_outputs.get("risk", {})
-        biggest_factor_desc = risk_output.get("biggest_risk", "Portfolio Sector Concentration")
-        
-        # 5. Build Decision Trace
-        decision_trace = [
-            {"stage": "Initial Technical & Fundamental Signal", "status": "BUY", "impact": "+30"},
-            {"stage": "News Sentiment Assessment", "status": "BUY", "impact": "-9"},
-            {"stage": "Regulatory Policy Analysis", "status": "HOLD", "impact": "-8"},
-            {"stage": "Personalized Risk & Exposure Audit", "status": "AVOID" if risk_output.get("impact_score", 0) < -15 else "BUY", "impact": f"{risk_output.get('impact_score', 0):+d}"},
-            {"stage": "Final Decision Synthesis", "status": final_decision, "impact": f"{net_score:+d}"}
-        ]
-        
-        # 6. Counterfactual Engine ("What Would Change This?")
-        counterfactuals = []
-        if final_decision != "BUY":
-            if risk_output.get("sector_exposure_pct", 0) > 20:
-                counterfactuals.append("Energy sector exposure in your portfolio falls below 20%")
-            counterfactuals.append("Regulatory inquiry into telecom tariff structure is resolved")
-            counterfactuals.append("FinBERT news sentiment trend reverses back to Positive")
-        else:
-            counterfactuals.append("Maintain current sector allocation and position size")
-            
-        # 7. Thesis Invalidation ("What Could Prove This Wrong?")
-        thesis_invalidation = [
-            "Quarterly operating cash flow conversion deteriorates further below 60%",
-            "Regulatory compliance costs increase significantly following CCI review",
-            "Broad market volatility index (VIX) spikes above 22"
-        ]
-        
-        # 8. Personalized Stock Switcher ("Better Portfolio Fits")
-        alternatives = []
-        if symbol == "RELIANCE" and user_id == "U001":
-            alternatives = [
-                {
-                    "symbol": "TCS",
-                    "name": "Tata Consultancy Services",
-                    "match_score": 87,
-                    "reasons": ["Lower portfolio concentration", "Better IT sector diversification", "Stronger cash flow conversion"]
-                },
-                {
-                    "symbol": "HDFCBANK",
-                    "name": "HDFC Bank Ltd.",
-                    "match_score": 81,
-                    "reasons": ["High credit growth trajectory", "Moderate valuation multiple"]
-                }
-            ]
-            
-        # 9. LLM / AIRouter Synthesis Explanation
-        prompt_payload = {
+            final_decision = SignalType.AVOID
+
+        # Calculate confidence (base 85%, penalize for conflicts and missing agents)
+        confidence = 88
+        if conflict_report.conflict_level == "HIGH":
+            confidence -= 15
+        elif conflict_report.conflict_level == "MODERATE":
+            confidence -= 8
+
+        if missing_agents:
+            confidence -= (len(missing_agents) * 6)
+        if failed_agents:
+            confidence -= (len(failed_agents) * 10)
+        confidence = max(20, min(95, confidence))
+
+        # 4. Aggregate strictly verified evidence
+        all_evidence: List[EvidenceItem] = []
+        for agent in valid_agents.values():
+            all_evidence.extend(agent.evidence)
+
+        # 5. Formulate Evidence, Interpretation, Conclusion, and Uncertainty
+        # Check if external AI provider is configured for synthesized prose
+        provider_name = ai_provider_service.get_active_provider_name()
+
+        # Build prompt facts for model synthesis
+        agent_summaries = {name: agent.summary for name, agent in valid_agents.items()}
+        prompt_content = {
             "symbol": symbol,
-            "user_id": user_id,
             "net_score": net_score,
-            "biggest_risk": biggest_factor_desc,
-            "reasons": all_positives[:2] + all_negatives[:2]
+            "final_decision": final_decision.value,
+            "conflict_level": conflict_report.conflict_level,
+            "disagreements": conflict_report.disagreements,
+            "agent_summaries": agent_summaries,
+            "missing_data": missing_agents
         }
-        ai_res = ai_router.generate_synthesis(prompt_payload)
-        
-        return {
-            "symbol": symbol,
-            "user_id": user_id,
-            "user_name": user.get("name"),
-            "final_decision": final_decision,
-            "confidence": base_confidence,
-            "net_score": net_score,
-            "agents": agent_outputs,
-            "conflicts": conflict_res,
-            "positive_factors": all_positives[:4],
-            "negative_factors": all_negatives[:4],
-            "biggest_factor": {
-                "agent": biggest_factor_agent,
-                "score": biggest_factor_score,
-                "description": biggest_factor_desc,
-                "callout": f"Personalized Risk ({biggest_factor_score:+d}): {biggest_factor_desc}"
-            },
-            "decision_trace": decision_trace,
-            "counterfactuals": counterfactuals,
-            "thesis_invalidation": thesis_invalidation,
-            "stock_switcher": alternatives,
-            "explanation": ai_res.get("explanation_summary"),
-            "llm_provider": ai_res.get("provider")
-        }
+
+        # Deterministic base synthesis
+        interpretation = (
+            f"Cross-agent telemetry indicates {conflict_report.badge.lower()} (net score: {net_score:+d}). "
+            f"Technical and fundamental factors contribute {valid_agents.get('technical', AgentOutput(agent_name='', symbol='', summary='', impact_score=0)).impact_score:+d} and "
+            f"{valid_agents.get('fundamental', AgentOutput(agent_name='', symbol='', summary='', impact_score=0)).impact_score:+d} points respectively. "
+            f"{conflict_report.summary}"
+        )
+
+        conclusion = (
+            f"Based on evaluated evidence, the synthesized recommendation is {final_decision.value} "
+            f"with {confidence}% confidence. Net impact weighting reflects combined momentum, fundamental quality, "
+            f"and portfolio risk constraints."
+        )
+
+        uncertainty_elements = []
+        if missing_agents:
+            uncertainty_elements.append(f"Missing data from {', '.join(missing_agents)}")
+        if conflict_report.conflict_level in ["MODERATE", "HIGH"]:
+            uncertainty_elements.append("Cross-domain signal friction between technicals, sentiment, and risk")
+        uncertainty_elements.append("Broad market macro rate decisions and raw material margin sensitivity")
+        uncertainty = "; ".join(uncertainty_elements) + "."
+
+        summary = (
+            f"Synthesized {len(valid_agents)} domain specialists for {symbol}: {final_decision.value} "
+            f"({net_score:+d} net points, {confidence}% confidence). {conflict_report.summary}"
+        )
+
+        # If an external provider is available and not deterministic, attempt AI prose enhancement
+        if provider_name != "deterministic":
+            try:
+                system_prompt = (
+                    "You are the ProsperHigh Chief Investment Intelligence Synthesis Agent. "
+                    "Analyze the provided structured domain agent outputs. "
+                    "Do NOT invent any financial numbers or fake facts absent from the input. "
+                    "Return a JSON object with keys: 'interpretation', 'conclusion', 'uncertainty', 'thesis'."
+                )
+                req = ModelRequest(
+                    messages=[{"role": "user", "content": json.dumps(prompt_content)}],
+                    system_prompt=system_prompt,
+                    temperature=0.2,
+                    max_tokens=600,
+                    json_mode=True
+                )
+                model_resp = ai_provider_service.generate(req)
+                if model_resp.parsed_json:
+                    p = model_resp.parsed_json
+                    interpretation = p.get("interpretation", interpretation)
+                    conclusion = p.get("conclusion", conclusion)
+                    uncertainty = p.get("uncertainty", uncertainty)
+                    if "thesis" in p:
+                        summary = p["thesis"]
+            except Exception as e:
+                warnings.append(f"AI prose generation routed to deterministic synthesis: {str(e)}")
+
+        latency_ms = int((time.time() - start_time) * 1000)
+
+        return SynthesisOutput(
+            symbol=symbol,
+            status=overall_status,
+            final_decision=final_decision,
+            confidence=confidence,
+            net_score=net_score,
+            summary=summary,
+            evidence=all_evidence,
+            interpretation=interpretation,
+            conclusion=conclusion,
+            uncertainty=uncertainty,
+            conflict_report=conflict_report,
+            agent_outputs=agent_outputs,
+            execution_time_ms=latency_ms,
+            model_provider=provider_name,
+            warnings=warnings
+        )
+
 
 synthesis_agent = SynthesisAgent()

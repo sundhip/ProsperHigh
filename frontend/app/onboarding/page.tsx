@@ -118,10 +118,15 @@ export default function OnboardingWizardPageV3() {
   const handleFinish = async () => {
     setSaving(true);
     const user = getStoredUser();
-    const userId = user?.id || `USR-${Date.now().toString(36).toUpperCase()}`;
+    if (!user) {
+      alert("Please sign in or create an account before saving onboarding settings.");
+      router.push("/login");
+      setSaving(false);
+      return;
+    }
     try {
       await saveOnboardingProfile({
-        user_id: userId,
+        user_id: user.id,
         profile: {
           country,
           currency,
@@ -143,8 +148,8 @@ export default function OnboardingWizardPageV3() {
         holdings: portfolioChoice === "manual" ? holdings : []
       });
       window.location.href = "/?tour=true";
-    } catch (e) {
-      window.location.href = "/?tour=true";
+    } catch (e: any) {
+      alert(e.message || "Failed to save profile on server.");
     } finally {
       setSaving(false);
     }
