@@ -7,14 +7,22 @@ from backend.database.models import Base
 # Database engine configuration
 is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 
-connect_args = {}
+engine_kwargs = {
+    "pool_pre_ping": True,
+}
+
 if is_sqlite:
-    connect_args["check_same_thread"] = False
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    # Production PostgreSQL connection pooling
+    engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
+    engine_kwargs["max_overflow"] = settings.DB_MAX_OVERFLOW
+    engine_kwargs["pool_recycle"] = settings.DB_POOL_RECYCLE
+    engine_kwargs["pool_timeout"] = settings.DB_POOL_TIMEOUT
 
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args=connect_args,
-    pool_pre_ping=True
+    **engine_kwargs
 )
 
 # Enforce foreign key constraints on SQLite
@@ -29,10 +37,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_db():
-    """FastAPI database session dependency with guaranteed closure."""
+    """FastAPI database session dependency with guaranteed transaction rollback on error and closure."""
     db: Session = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

@@ -13,17 +13,30 @@ class Settings(BaseSettings):
 
     # Application
     APP_NAME: str = "ProsperHigh Platform API"
-    APP_VERSION: str = "3.1.0"
+    APP_VERSION: str = "3.2.0"
     ENVIRONMENT: str = "development"
+    DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
 
-    # Database
+    # Database & Connection Pooling
     DATABASE_URL: str = "sqlite:///./prosperhigh.db"
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
+    DB_POOL_RECYCLE: int = 1800
+    DB_POOL_TIMEOUT: int = 30
 
     # Authentication & Security
     JWT_SECRET_KEY: str = "dev-secret-key-change-this-in-production-to-a-secure-random-32char-token"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+    MAX_REQUEST_BODY_SIZE_BYTES: int = 5 * 1024 * 1024  # 5MB
+
+    # Rate Limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_AUTH_PER_MINUTE: int = 20
+    RATE_LIMIT_AI_PER_MINUTE: int = 30
+    RATE_LIMIT_RESEARCH_PER_MINUTE: int = 40
+    RATE_LIMIT_GENERAL_PER_MINUTE: int = 120
 
     # CORS
     ALLOWED_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
@@ -35,16 +48,20 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
 
-    # AI Model Providers
+    # AI Model Providers & Cost Controls
     PRIMARY_LLM_PROVIDER: str = "gemini"
     SECONDARY_LLM_PROVIDER: str = "groq"
-    FALLBACK_LLM_PROVIDER: str = "local_qwen"
+    FALLBACK_LLM_PROVIDER: str = "deterministic"
 
     GEMINI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
     OLLAMA_ENDPOINT: str = "http://localhost:11434/api/generate"
     OLLAMA_MODEL: str = "qwen3:8b"
+
+    AI_MAX_CONCURRENT_ANALYSES: int = 8
+    AI_ANALYSIS_TIMEOUT_SECONDS: int = 30
+    AI_AGENT_TIMEOUT_SECONDS: int = 10
 
     # Technical Analysis Settings
     RSI_PERIOD: int = 14

@@ -1,8 +1,9 @@
 import asyncio
 import time
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
+from backend.core.config import settings
 
 from backend.agents.market_agent import market_agent
 from backend.agents.technical_agent import technical_agent
@@ -27,17 +28,42 @@ class Orchestrator:
     AI Multi-Agent Orchestrator:
     Manages concurrent async execution of domain specialists, validates structured outputs,
     isolates agent failures, aggregates through Synthesis, and persists audit runs to the database.
+    Production-hardened with concurrency semaphores, bounded execution timeouts, and cost safeguards.
     """
 
+    def __init__(self):
+        self._semaphore = asyncio.Semaphore(settings.AI_MAX_CONCURRENT_ANALYSES)
+        self._recent_cache: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+
     async def _run_agent_safe(self, name: str, fn, *args) -> AgentOutput:
-        """Executes an agent in a background thread with error isolation and schema validation."""
+        """Executes an agent in a background thread with error isolation, timeouts, and schema validation."""
         start_time = time.time()
         try:
-            res = await asyncio.to_thread(fn, *args)
+            res = await asyncio.wait_for(
+                asyncio.to_thread(fn, *args),
+                timeout=float(settings.AI_AGENT_TIMEOUT_SECONDS)
+            )
             if isinstance(res, AgentOutput):
                 return res
             # If agent returned dict, validate into AgentOutput
             return AgentOutput(**res)
+        except asyncio.TimeoutError:
+            latency_ms = int((time.time() - start_time) * 1000)
+            return AgentOutput(
+                agent_name=name,
+                symbol=args[0] if args else "UNKNOWN",
+                status=AgentStatus.FAILED,
+                signal=SignalType.NEUTRAL,
+                confidence=0.0,
+                impact_score=0,
+                summary=f"Timeout: {name} agent exceeded {settings.AI_AGENT_TIMEOUT_SECONDS}s execution limit.",
+                findings=[],
+                evidence=[],
+                risks=[],
+                warnings=[f"{name} agent execution timed out."],
+                limitations=["Execution bounded by cost/latency threshold"],
+                execution_metadata={"latency_ms": latency_ms, "error": "Timeout"}
+            )
         except Exception as e:
             latency_ms = int((time.time() - start_time) * 1000)
             return AgentOutput(
@@ -63,9 +89,21 @@ class Orchestrator:
         db: Optional[Session] = None
     ) -> Dict[str, Any]:
         """
-        Asynchronously runs 6 domain specialists concurrently, validates outputs,
+        Asynchronously runs 6 domain specialists concurrently with concurrency limits,
         synthesizes final thesis, and saves execution records to the database.
         """
+        async with self._semaphore:
+            return await asyncio.wait_for(
+                self._execute_analysis(symbol, user_id, db),
+                timeout=float(settings.AI_ANALYSIS_TIMEOUT_SECONDS)
+            )
+
+    async def _execute_analysis(
+        self,
+        symbol: str,
+        user_id: Optional[str] = None,
+        db: Optional[Session] = None
+    ) -> Dict[str, Any]:
         start_time = time.time()
         canon_symbol = data_service.normalize_symbol(symbol)
 

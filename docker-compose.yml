@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: prosperhigh-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: prosperhigh_user
+      POSTGRES_PASSWORD: prosperhigh_secure_password
+      POSTGRES_DB: prosperhigh_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prosperhigh_user -d prosperhigh_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prosperhigh-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://prosperhigh_user:prosperhigh_secure_password@postgres:5432/prosperhigh_prod
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-prod-secret-replace-with-secure-32char-string-in-env}
+      ALLOWED_ORIGINS: http://localhost:3000,http://frontend:3000
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: prosperhigh-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
