@@ -330,6 +330,33 @@ export default function HomePageV3() {
           </div>
         </div>
       </div>
+
+      {/* 4. Integrated Platform Navigation: Research & Decision Audit */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+        <Link
+          href="/research"
+          className="prosper-card p-5 border-l-4 border-l-primary hover:border-slate-300 transition-all flex items-center justify-between group"
+        >
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider">Citation-Backed RAG</span>
+            <h4 className="text-sm font-bold text-charcoal font-manrope">Exchange Filings & Document Terminal</h4>
+            <p className="text-xs text-slate-500">Query statutory annual reports and disclosures with verified page citations.</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        </Link>
+
+        <Link
+          href="/history"
+          className="prosper-card p-5 border-l-4 border-l-accent hover:border-slate-300 transition-all flex items-center justify-between group"
+        >
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold text-accent uppercase tracking-wider">Auditability & Governance</span>
+            <h4 className="text-sm font-bold text-charcoal font-manrope">Decision History & Thesis Evolution</h4>
+            <p className="text-xs text-slate-500">Inspect past multi-agent analyses, agent signal breakdowns, and confidence logs.</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent group-hover:translate-x-1 transition-all" />
+        </Link>
+      </div>
     </div>
   );
 }

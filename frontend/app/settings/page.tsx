@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getProfile, saveOnboardingProfile } from "@/lib/api";
+import { getProfile, updateProfile } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { Settings, Shield, User, Sliders, Target, Lock, Save, CheckCircle2 } from "lucide-react";
 
@@ -22,9 +22,13 @@ export default function SettingsPageV2() {
   const handleSave = async () => {
     const user = getStoredUser();
     if (!user) return;
-    await saveOnboardingProfile(profile);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      await updateProfile(profile);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      alert(err.message || "Failed to update profile settings.");
+    }
   };
 
   const tabs = [

@@ -379,9 +379,15 @@ export async function getAnalysisById(analysisId: string): Promise<any | null> {
 // RESEARCH TERMINAL API
 // ----------------------------------------------------
 export async function askResearch(symbol: string, query: string): Promise<any> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const authHeaders = getAuthHeaders();
+  if (authHeaders["Authorization"]) {
+    headers["Authorization"] = authHeaders["Authorization"];
+  }
+
   const res = await fetch(`${API_BASE}/api/research/ask`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ symbol: symbol.toUpperCase().trim(), query }),
   });
 
@@ -391,4 +397,29 @@ export async function askResearch(symbol: string, query: string): Promise<any> {
   }
 
   return await res.json();
+}
+
+export async function getResearchHistory(): Promise<any[]> {
+  const user = getStoredUser();
+  if (!user) return [];
+
+  try {
+    const res = await fetch(`${API_BASE}/api/research/history`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return [];
+  } catch (err) {
+    return [];
+  }
+}
+
+export async function getResearchDocuments(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/research/documents`);
+    if (res.ok) return await res.json();
+    return [];
+  } catch (err) {
+    return [];
+  }
 }

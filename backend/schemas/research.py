@@ -8,11 +8,13 @@ class ResearchRequest(BaseModel):
 
 
 class CitationItem(BaseModel):
+    chunk_id: Optional[str] = None
     document: Optional[str] = None
     year: Optional[str] = None
     page: Optional[int] = None
     section: Optional[str] = None
     citation_string: Optional[str] = None
+    similarity_score: Optional[float] = None
 
 
 class ResearchResponse(BaseModel):
@@ -21,3 +23,26 @@ class ResearchResponse(BaseModel):
     answer: str
     citations: List[CitationItem] = Field(default_factory=list)
     retrieval_confidence: float = 0.88
+    insufficient_evidence: bool = False
+
+
+class ResearchHistoryItem(BaseModel):
+    id: str
+    symbol: Optional[str] = None
+    query: str
+    answer: str
+    confidence: float
+    citations: List[CitationItem] = Field(default_factory=list)
+    created_at: Optional[str] = None
+
+
+class DocumentSummary(BaseModel):
+    id: str
+    title: str
+    source: str
+    company: str
+    document_type: str
+    year: Optional[str] = None
+    page_count: Optional[int] = None
+    status: str
+    chunk_count: int

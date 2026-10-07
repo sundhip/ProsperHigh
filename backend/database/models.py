@@ -41,6 +41,9 @@ class User(Base):
     analyses: Mapped[List["AnalysisHistory"]] = relationship(
         "AnalysisHistory", back_populates="user", cascade="all, delete-orphan"
     )
+    research_history: Mapped[List["ResearchHistory"]] = relationship(
+        "ResearchHistory", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class InvestorProfile(Base):
@@ -219,4 +222,60 @@ class AgentRun(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     analysis: Mapped["AnalysisHistory"] = relationship("AnalysisHistory", back_populates="agent_runs")
+    run_output: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    company: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
+    document_type: Mapped[str] = mapped_column(String(50), index=True, default="Annual Report", nullable=False)
+    year: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    page_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    version: Mapped[str] = mapped_column(String(20), default="1.0", nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="INDEXED", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    chunks: Mapped[List["DocumentChunk"]] = relationship(
+        "DocumentChunk", back_populates="document", cascade="all, delete-orphan"
+    )
+
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"CHK-{uuid.uuid4().hex[:12].upper()}")
+    document_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("documents.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    chunk_index: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    section: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    page_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    document: Mapped["Document"] = relationship("Document", back_populates="chunks")
+
+
+class ResearchHistory(Base):
+    __tablename__ = "research_history"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"RES-{uuid.uuid4().hex[:12].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[Optional[str]] = mapped_column(String(30), index=True, nullable=True)
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, default=0.85, nullable=False)
+    citations_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    filters_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="research_history")
 
