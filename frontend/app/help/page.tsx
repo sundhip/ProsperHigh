@@ -26,7 +26,7 @@ export default function HelpPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <div>
         <div className="flex items-center space-x-2">

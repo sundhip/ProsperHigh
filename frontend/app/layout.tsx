@@ -35,8 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <ExperienceProvider>
             {/* Desktop App Container: Rounded bento shell with outer margin (Ref B, C, D) */}
-            <div className="min-h-screen p-0 md:p-3 lg:p-4 flex flex-col justify-between">
-              <div className="flex-1 flex w-full max-w-[1600px] mx-auto gap-3 lg:gap-4 relative">
+            <div className="min-h-screen p-0 md:p-3 lg:p-4 flex flex-col justify-between w-full">
+              <div className="flex-1 flex w-full gap-3 lg:gap-4 relative">
                 {/* Dark Rounded Sidebar Panel */}
                 <Sidebar onStartTour={() => setIsTourOpen(true)} />
 

@@ -92,7 +92,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="w-full space-y-6">
       {/* Header */}
         <div>
           <div className="flex items-center space-x-2">
