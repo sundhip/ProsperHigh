@@ -17,11 +17,14 @@ import { SuitabilityBadgeCard } from "@/components/SuitabilityBadgeCard";
 import { AIDebateCard } from "@/components/AIDebateCard";
 import { AnalysisComparisonModal } from "@/components/AnalysisComparisonModal";
 import { getAnalysisHistory } from "@/lib/api";
-import { Search, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, GitCompare } from "lucide-react";
+import { useExperience } from "@/components/ExperienceProvider";
+import { PlainLanguageTooltip } from "@/components/ui/PlainLanguageTooltip";
+import { Search, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, GitCompare, Info } from "lucide-react";
 
 function AnalyzeContentV3() {
   const searchParams = useSearchParams();
   const symbolParam = searchParams.get("symbol") || "TATAMOTORS";
+  const { isBeginner, isAdvanced } = useExperience();
 
   const [symbol, setSymbol] = useState(symbolParam);
   const [searchInput, setSearchInput] = useState("");
@@ -35,6 +38,13 @@ function AnalyzeContentV3() {
   const [error, setError] = useState<string | null>(null);
   const [historyRuns, setHistoryRuns] = useState<any[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
+
+  // Sync default disclosure state with experience mode
+  useEffect(() => {
+    if (isAdvanced) {
+      setShowMultiAgentDetails(true);
+    }
+  }, [isAdvanced]);
 
   const fetchAnalysisData = (sym: string) => {
     setLoading(true);
@@ -236,6 +246,7 @@ function AnalyzeContentV3() {
               <div className="flex items-center space-x-2 font-bold text-amber-800 dark:text-amber-400">
                 <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Synthesis Warnings & Model Uncertainty</span>
+                <PlainLanguageTooltip termKey="uncertainty_profile" />
               </div>
               {analysis.uncertainty && (
                 <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
@@ -286,11 +297,22 @@ function AnalyzeContentV3() {
           <div className="text-center pt-2">
             <button
               onClick={() => setShowMultiAgentDetails(!showMultiAgentDetails)}
-              className="inline-flex items-center space-x-2 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-extrabold shadow-md hover:bg-slate-800 transition-all"
+              className="inline-flex items-center space-x-2 px-6 py-2.5 bg-slate-900 dark:bg-sky-600 text-white rounded-xl text-xs font-extrabold shadow-md hover:bg-slate-800 dark:hover:bg-sky-500 transition-all"
             >
-              <span>{showMultiAgentDetails ? "Hide Multi-Agent Flow" : "How ProsperHigh Reached This Decision (6 Agents)"}</span>
-              {showMultiAgentDetails ? <ChevronUp className="w-4 h-4 text-accent" /> : <ChevronDown className="w-4 h-4 text-accent" />}
+              <span>
+                {showMultiAgentDetails
+                  ? "Hide Multi-Agent Flow"
+                  : isBeginner
+                  ? "Show Detailed Multi-Agent Breakdown (6 Specialized Agents)"
+                  : "How ProsperHigh Reached This Decision (6 Agents)"}
+              </span>
+              {showMultiAgentDetails ? <ChevronUp className="w-4 h-4 text-[#C9A96E]" /> : <ChevronDown className="w-4 h-4 text-[#C9A96E]" />}
             </button>
+            {isBeginner && !showMultiAgentDetails && (
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                Essential summary shown above. Expand to inspect debate arguments, quantitative agent weights, and decision traces.
+              </p>
+            )}
           </div>
 
           {showMultiAgentDetails && (

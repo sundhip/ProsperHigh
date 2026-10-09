@@ -8,6 +8,7 @@ import { MetricCard } from "@/components/ui/MetricCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { GettingStartedGuide } from "@/components/GettingStartedGuide";
 import {
   TrendingUp,
   TrendingDown,
@@ -212,6 +213,13 @@ export default function DashboardPage() {
         <CardSkeleton count={4} />
       ) : (
         <>
+          {/* Guided Onboarding Journey Checklist */}
+          <GettingStartedGuide
+            hasHoldings={hasHoldings}
+            hasAnalyzed={true}
+            hasResearched={false}
+          />
+
           {/* Key Portfolio Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
@@ -221,12 +229,14 @@ export default function DashboardPage() {
               changeLabel="1D Change"
               asOf={marketIntel?.as_of}
               icon={<PieIcon className="w-4 h-4" />}
+              termKey="cost_basis"
             />
             <MetricCard
               label="Total Cost Basis"
               value={`₹${(portfolio?.total_cost || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
               sublabel={`${holdings.length} Active Positions`}
               icon={<Layers className="w-4 h-4" />}
+              termKey="cost_basis"
             />
             <MetricCard
               label="Unrealized P&L"
@@ -234,12 +244,14 @@ export default function DashboardPage() {
               changePct={portfolio?.total_return_pct ?? null}
               changeLabel="Total Return"
               icon={<TrendingUp className="w-4 h-4" />}
+              termKey="unrealized_pnl"
             />
             <MetricCard
               label="Portfolio Health"
               value={portfolio?.health_score ? `${portfolio.health_score}/100` : "Good"}
               sublabel={portfolio?.risk_level || "Balanced Risk"}
               icon={<ShieldCheck className="w-4 h-4" />}
+              termKey="health_score"
             />
           </div>
 

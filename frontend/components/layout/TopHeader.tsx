@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getStoredUser, UserSession } from "@/lib/auth";
 import { getLiveTicker, searchStocks } from "@/lib/api";
 import { useTheme } from "@/components/ThemeProvider";
+import { useExperience } from "@/components/ExperienceProvider";
 import {
   Search,
   Bell,
@@ -25,6 +26,7 @@ export const TopHeader: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { mode, setMode, isBeginner } = useExperience();
 
   const [user, setUser] = useState<UserSession | null>(null);
   const [ticker, setTicker] = useState<any[]>([]);
@@ -233,6 +235,17 @@ export const TopHeader: React.FC = () => {
           >
             <Bell className="w-4 h-4" />
           </Link>
+
+          {/* Experience Mode Toggle (Beginner vs Advanced) */}
+          <button
+            onClick={() => setMode(isBeginner ? "advanced" : "beginner")}
+            className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+            title={isBeginner ? "Switch to Advanced Experience (Full Quant Detail)" : "Switch to Beginner Experience (Guided & Essential Views)"}
+            aria-label="Toggle Experience Mode"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isBeginner ? "text-[#C9A96E]" : "text-sky-500"}`} />
+            <span className="capitalize">{mode} Mode</span>
+          </button>
 
           {/* Theme Switcher Button */}
           <button

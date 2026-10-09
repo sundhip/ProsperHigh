@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { getStoredUser, clearStoredUser, UserSession } from "@/lib/auth";
 import { useTheme, Theme } from "@/components/ThemeProvider";
+import { useExperience, ExperienceMode } from "@/components/ExperienceProvider";
 import {
   Settings,
   Sun,
@@ -14,11 +15,13 @@ import {
   CheckCircle2,
   Sliders,
   DollarSign,
-  Shield
+  Shield,
+  Sparkles
 } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { mode, setMode } = useExperience();
   const [user, setUser] = useState<UserSession | null>(null);
   const [currency, setCurrency] = useState("INR");
   const [savedMsg, setSavedMsg] = useState(false);
@@ -28,6 +31,12 @@ export default function SettingsPage() {
     const storedCurr = localStorage.getItem("prosper_currency") || "INR";
     setCurrency(storedCurr);
   }, []);
+
+  const handleModeChange = (newMode: ExperienceMode) => {
+    setMode(newMode);
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 2500);
+  };
 
   const handleCurrencyChange = (newCurr: string) => {
     setCurrency(newCurr);
@@ -134,7 +143,62 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* 2. Financial Units & Locales */}
+      {/* 2. Experience Mode (Beginner vs Advanced) */}
+      <div className="prosper-card p-6 space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display flex items-center space-x-2">
+            <Sparkles className="w-4 h-4 text-[#C9A96E]" />
+            <span>Investment Experience Mode</span>
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Tailor the interface density and progressive disclosure. Both modes use the exact same verified data and calculations.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          {/* Beginner Mode */}
+          <button
+            onClick={() => handleModeChange("beginner")}
+            className={`p-4 rounded-xl border text-left flex flex-col justify-between space-y-3 transition-all ${
+              mode === "beginner"
+                ? "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/20 dark:bg-amber-950/20"
+                : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 dark:text-white">Beginner Friendly (Default)</span>
+              {mode === "beginner" && <span className="text-[10px] font-bold text-amber-600">Active</span>}
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                Presents high-level summaries first, auto-collapses advanced multi-agent traces, and highlights plain-language tooltips for financial terms.
+              </div>
+            </div>
+          </button>
+
+          {/* Advanced Mode */}
+          <button
+            onClick={() => handleModeChange("advanced")}
+            className={`p-4 rounded-xl border text-left flex flex-col justify-between space-y-3 transition-all ${
+              mode === "advanced"
+                ? "border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/20 dark:bg-sky-950/20"
+                : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 dark:text-white">Advanced Quantitative</span>
+              {mode === "advanced" && <span className="text-[10px] font-bold text-sky-400">Active</span>}
+            </div>
+            <div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                Shows dense financial metrics upfront, auto-expands multi-agent debates and scenario stress tests, and optimizes for experienced analysts.
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Financial Units & Locales */}
       <div className="prosper-card p-6 space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">

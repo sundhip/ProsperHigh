@@ -2,6 +2,7 @@
 
 import React from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { PlainLanguageTooltip, FINANCIAL_TERMS } from "./PlainLanguageTooltip";
 
 interface MetricCardProps {
   label: string;
@@ -12,6 +13,7 @@ interface MetricCardProps {
   asOf?: string;
   icon?: React.ReactNode;
   isStale?: boolean;
+  termKey?: keyof typeof FINANCIAL_TERMS;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -23,6 +25,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   asOf,
   icon,
   isStale = false,
+  termKey,
 }) => {
   const isPositive = typeof changePct === "number" && changePct > 0;
   const isNegative = typeof changePct === "number" && changePct < 0;
@@ -31,9 +34,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   return (
     <div className="prosper-card p-5 relative overflow-hidden">
       <div className="flex items-center justify-between text-secondary mb-2">
-        <span className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
-          {label}
-        </span>
+        <div className="flex items-center">
+          <span className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
+            {label}
+          </span>
+          {termKey && <PlainLanguageTooltip termKey={termKey} />}
+        </div>
         {icon && <div className="text-slate-400 dark:text-slate-500">{icon}</div>}
       </div>
 

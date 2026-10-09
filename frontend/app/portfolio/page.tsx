@@ -166,6 +166,7 @@ export default function PortfolioPage() {
               value={`₹${(portfolio?.total_portfolio_value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
               sublabel={`Cost: ₹${(portfolio?.total_invested_amount || 0).toLocaleString("en-IN")}`}
               icon={<PieIcon className="w-4 h-4" />}
+              termKey="cost_basis"
             />
             <MetricCard
               label="Unrealized P&L"
@@ -173,12 +174,14 @@ export default function PortfolioPage() {
               changePct={portfolio?.return_percentage ?? null}
               changeLabel="Overall Return"
               icon={<TrendingUp className="w-4 h-4" />}
+              termKey="unrealized_pnl"
             />
             <MetricCard
               label="Diversification Health"
               value={`${portfolio?.health_score || 0}/100`}
               sublabel={portfolio?.health_score > 70 ? "Healthy Diversification" : "Review Allocation"}
               icon={<Activity className="w-4 h-4" />}
+              termKey="health_score"
             />
             <MetricCard
               label="Active Positions"

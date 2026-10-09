@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { PieChart, ShieldAlert, CheckCircle2, TrendingUp, Info } from "lucide-react";
 import { getPortfolioComposition } from "@/lib/api";
+import { PlainLanguageTooltip } from "@/components/ui/PlainLanguageTooltip";
 
 interface Props {
   portfolioId?: string;
@@ -72,10 +73,13 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* HHI Score */}
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="text-[10px] uppercase font-bold text-slate-500">HHI Score (0 - 10,000)</div>
-          <div className="text-2xl font-black text-charcoal mt-0.5">{Math.round(hhi)}</div>
-          <div className="text-[11px] text-slate-500 mt-1">
+        <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+            <span>HHI Score (0 - 10,000)</span>
+            <PlainLanguageTooltip termKey="hhi" />
+          </div>
+          <div className="text-2xl font-black text-charcoal dark:text-white mt-0.5">{Math.round(hhi)}</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
             {hhi < 1500
               ? "Healthy (< 1,500 = Diversified)"
               : hhi < 2500
