@@ -28,6 +28,7 @@ from backend.api.routers import (
     analysis,
     research,
     jobs,
+    goals,
 )
 
 
@@ -185,3 +186,5 @@ app.include_router(stocks.router)
 app.include_router(analysis.router)
 app.include_router(research.router)
 app.include_router(jobs.router)
+app.include_router(goals.router)
+

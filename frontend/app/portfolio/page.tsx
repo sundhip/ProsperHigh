@@ -4,13 +4,19 @@ import React, { useState, useEffect } from "react";
 import { getPortfolio, addHolding, deleteHolding, importPortfolioCSV } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { ShieldAlert, CheckCircle2, PieChart as PieIcon, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Upload, Download, AlertCircle } from "lucide-react";
+import { PortfolioCompositionCard } from "@/components/PortfolioCompositionCard";
+import { WhatIfSimulatorCard } from "@/components/WhatIfSimulatorCard";
+import { StressTestingCard } from "@/components/StressTestingCard";
+import { GoalsTrackerCard } from "@/components/GoalsTrackerCard";
+import { ShieldAlert, CheckCircle2, PieChart as PieIcon, Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, Upload, Download, AlertCircle, Sliders, Activity, Target } from "lucide-react";
 
 export default function PortfolioPageV2() {
   const [portfolio, setPortfolio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalTab, setModalTab] = useState<"manual" | "csv">("manual");
+  const [portfolioTab, setPortfolioTab] = useState<"overview" | "composition" | "whatif" | "stress" | "goals">("overview");
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   // Form State
   const [symbol, setSymbol] = useState("");
@@ -26,6 +32,7 @@ export default function PortfolioPageV2() {
     const user = getStoredUser();
     getPortfolio(user?.id).then((res) => {
       setPortfolio(res);
+      setRefreshCounter((c) => c + 1);
       setLoading(false);
     });
   };
@@ -160,119 +167,213 @@ export default function PortfolioPageV2() {
             </div>
           </div>
 
-          {/* Sector Allocation Chart & Health Breakdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="prosper-card p-6">
-              <h3 className="text-base font-bold text-charcoal font-manrope mb-4 flex items-center space-x-2">
-                <PieIcon className="w-5 h-5 text-primary" />
-                <span>Sector Exposure Distribution</span>
-              </h3>
+          {/* Phase 4 Portfolio Navigation Tabs */}
+          <div className="flex flex-wrap border-b border-slate-200 gap-1.5 bg-white p-2 rounded-2xl border shadow-xs">
+            <button
+              onClick={() => setPortfolioTab("overview")}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 ${
+                portfolioTab === "overview"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <PieIcon className="w-3.5 h-3.5" />
+              <span>Overview & Holdings</span>
+            </button>
 
-              {sectorData.length === 0 ? (
-                <div className="h-60 flex items-center justify-center text-xs text-slate-400 font-bold">
-                  No positions added yet. Click "+ Add Holding" to view sector exposure.
+            <button
+              onClick={() => setPortfolioTab("composition")}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 ${
+                portfolioTab === "composition"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>Concentration & HHI</span>
+            </button>
+
+            <button
+              onClick={() => setPortfolioTab("whatif")}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 ${
+                portfolioTab === "whatif"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>What-If Sandbox</span>
+            </button>
+
+            <button
+              onClick={() => setPortfolioTab("stress")}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 ${
+                portfolioTab === "stress"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <TrendingDown className="w-3.5 h-3.5" />
+              <span>Stress Testing</span>
+            </button>
+
+            <button
+              onClick={() => setPortfolioTab("goals")}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center space-x-1.5 ${
+                portfolioTab === "goals"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <Target className="w-3.5 h-3.5" />
+              <span>Financial Goals</span>
+            </button>
+          </div>
+
+          {/* Conditional Sub-View Rendering */}
+          {portfolioTab === "overview" && (
+            <>
+              {/* Sector Allocation Chart & Health Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="prosper-card p-6">
+                  <h3 className="text-base font-bold text-charcoal font-manrope mb-4 flex items-center space-x-2">
+                    <PieIcon className="w-5 h-5 text-primary" />
+                    <span>Sector Exposure Distribution</span>
+                  </h3>
+
+                  {sectorData.length === 0 ? (
+                    <div className="h-60 flex items-center justify-center text-xs text-slate-400 font-bold">
+                      No positions added yet. Click "+ Add Holding" to view sector exposure.
+                    </div>
+                  ) : (
+                    <div className="h-60 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={sectorData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
+                            {sectorData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => [`${value}%`, "Sector Weight"]} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="h-60 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={sectorData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
-                        {sectorData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [`${value}%`, "Sector Weight"]} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+
+                <div className="prosper-card p-6 space-y-4">
+                  <h3 className="text-base font-bold text-charcoal font-manrope">Portfolio Health Subcategories</h3>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Diversification", score: portfolio?.health_breakdown?.diversification || 0 },
+                      { label: "Risk Alignment", score: portfolio?.health_breakdown?.risk_alignment || 0 },
+                      { label: "Concentration", score: portfolio?.health_breakdown?.concentration || 0 },
+                      { label: "Sector Balance", score: portfolio?.health_breakdown?.sector_balance || 0 },
+                      { label: "Goal Alignment", score: portfolio?.health_breakdown?.goal_alignment || 0 }
+                    ].map((item) => (
+                      <div key={item.label} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-slate-700">
+                          <span>{item.label}</span>
+                          <span>{item.score}/100</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                          <div className="bg-primary h-full transition-all" style={{ width: `${item.score}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stale Quote Alert if any holding is cached or using previous close */}
+              {portfolio?.has_stale_quotes && (
+                <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-center space-x-2">
+                  <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Some market quotes are currently using cached data or previous close. Metrics update automatically with live streams.</span>
                 </div>
               )}
-            </div>
 
-            <div className="prosper-card p-6 space-y-4">
-              <h3 className="text-base font-bold text-charcoal font-manrope">Portfolio Health Subcategories</h3>
-              <div className="space-y-3">
-                {[
-                  { label: "Diversification", score: portfolio?.health_breakdown?.diversification || 0 },
-                  { label: "Risk Alignment", score: portfolio?.health_breakdown?.risk_alignment || 0 },
-                  { label: "Concentration", score: portfolio?.health_breakdown?.concentration || 0 },
-                  { label: "Sector Balance", score: portfolio?.health_breakdown?.sector_balance || 0 },
-                  { label: "Goal Alignment", score: portfolio?.health_breakdown?.goal_alignment || 0 }
-                ].map((item) => (
-                  <div key={item.label} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>{item.label}</span>
-                      <span>{item.score}/100</span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full transition-all" style={{ width: `${item.score}%` }} />
-                    </div>
+              {/* Holdings Table */}
+              <div className="prosper-card p-6 space-y-4">
+                <h3 className="text-base font-bold text-charcoal font-manrope">Active Stock Holdings Table</h3>
+
+                {portfolio?.holdings?.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 font-bold border border-dashed border-slate-300 rounded-xl">
+                    No stock holdings added yet. Click "+ Add Holding / Import CSV" above to start!
                   </div>
-                ))}
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-500 uppercase font-black">
+                          <th className="py-3 px-3">Symbol</th>
+                          <th className="py-3 px-3">Sector</th>
+                          <th className="py-3 px-3">Qty</th>
+                          <th className="py-3 px-3">Avg Price</th>
+                          <th className="py-3 px-3">Current Price</th>
+                          <th className="py-3 px-3">Current Value</th>
+                          <th className="py-3 px-3">Weight %</th>
+                          <th className="py-3 px-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {portfolio?.holdings?.map((h: any) => (
+                          <tr key={h.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-all font-semibold text-slate-700">
+                            <td className="py-3 px-3 font-extrabold text-primary">{h.symbol}</td>
+                            <td className="py-3 px-3">{h.sector}</td>
+                            <td className="py-3 px-3">{h.quantity}</td>
+                            <td className="py-3 px-3">₹{h.average_price}</td>
+                            <td className="py-3 px-3 font-bold text-slate-900">
+                              ₹{h.current_price}
+                              {!h.quote_available && (
+                                <span className="text-[10px] text-amber-600 ml-1 font-normal" title="Live quote unavailable, cost basis used">
+                                  (cost basis)
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 font-black text-charcoal">₹{h.current_value?.toLocaleString("en-IN")}</td>
+                            <td className="py-3 px-3 font-bold text-slate-600">{h.portfolio_weight_pct}%</td>
+                            <td className="py-3 px-3 text-right">
+                              <button onClick={() => handleDelete(h.id)} className="p-1 text-slate-400 hover:text-negative" title="Delete Holding">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
-
-          {/* Stale Quote Alert if any holding is cached or using previous close */}
-          {portfolio?.has_stale_quotes && (
-            <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-center space-x-2">
-              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Some market quotes are currently using cached data or previous close. Metrics update automatically with live streams.</span>
-            </div>
+            </>
           )}
 
-          {/* Holdings Table */}
-          <div className="prosper-card p-6 space-y-4">
-            <h3 className="text-base font-bold text-charcoal font-manrope">Active Stock Holdings Table</h3>
+          {portfolioTab === "composition" && (
+            <PortfolioCompositionCard
+              portfolioId={portfolio?.id}
+              refreshTrigger={refreshCounter}
+            />
+          )}
 
-            {portfolio?.holdings?.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-500 font-bold border border-dashed border-slate-300 rounded-xl">
-                No stock holdings added yet. Click "+ Add Holding / Import CSV" above to start!
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-slate-500 uppercase font-black">
-                      <th className="py-3 px-3">Symbol</th>
-                      <th className="py-3 px-3">Sector</th>
-                      <th className="py-3 px-3">Qty</th>
-                      <th className="py-3 px-3">Avg Price</th>
-                      <th className="py-3 px-3">Current Price</th>
-                      <th className="py-3 px-3">Current Value</th>
-                      <th className="py-3 px-3">Weight %</th>
-                      <th className="py-3 px-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {portfolio?.holdings?.map((h: any) => (
-                      <tr key={h.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-all font-semibold text-slate-700">
-                        <td className="py-3 px-3 font-extrabold text-primary">{h.symbol}</td>
-                        <td className="py-3 px-3">{h.sector}</td>
-                        <td className="py-3 px-3">{h.quantity}</td>
-                        <td className="py-3 px-3">₹{h.average_price}</td>
-                        <td className="py-3 px-3 font-bold text-slate-900">
-                          ₹{h.current_price}
-                          {!h.quote_available && (
-                            <span className="text-[10px] text-amber-600 ml-1 font-normal" title="Live quote unavailable, cost basis used">
-                              (cost basis)
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 font-black text-charcoal">₹{h.current_value?.toLocaleString("en-IN")}</td>
-                        <td className="py-3 px-3 font-bold text-slate-600">{h.portfolio_weight_pct}%</td>
-                        <td className="py-3 px-3 text-right">
-                          <button onClick={() => handleDelete(h.id)} className="p-1 text-slate-400 hover:text-negative" title="Delete Holding">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          {portfolioTab === "whatif" && (
+            <WhatIfSimulatorCard
+              portfolioId={portfolio?.id}
+              onRefreshPortfolio={fetchPortfolio}
+            />
+          )}
+
+          {portfolioTab === "stress" && (
+            <StressTestingCard
+              portfolioId={portfolio?.id}
+            />
+          )}
+
+          {portfolioTab === "goals" && (
+            <GoalsTrackerCard
+              portfolioValue={portfolio?.total_portfolio_value || 0}
+            />
+          )}
         </>
       )}
 

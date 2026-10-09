@@ -20,7 +20,15 @@ from backend.schemas.agent_contracts import (
     SynthesisOutput
 )
 from backend.services.data_service import data_service
-from backend.database.models import AnalysisRun, AgentRun
+from backend.services.suitability_engine import suitability_engine
+from backend.services.debate_engine import debate_engine
+from backend.services.thesis_engine import thesis_engine
+from backend.services.counterfactual_engine import counterfactual_engine
+from backend.services.profile_engine import profile_engine
+from backend.services.portfolio_service import portfolio_service
+from backend.services.market_data.service import market_data_service
+from backend.database.models import AnalysisRun, AgentRun, InvestmentThesisRecord
+
 
 
 class Orchestrator:
@@ -86,15 +94,18 @@ class Orchestrator:
         self,
         symbol: str,
         user_id: Optional[str] = None,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
+        personalized: bool = True,
+        proposed_investment_amount: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Asynchronously runs 6 domain specialists concurrently with concurrency limits,
-        synthesizes final thesis, and saves execution records to the database.
+        synthesizes investment assessment, runs suitability engine if personalized,
+        extracts debate & thesis, and saves execution records to the database.
         """
         async with self._semaphore:
             return await asyncio.wait_for(
-                self._execute_analysis(symbol, user_id, db),
+                self._execute_analysis(symbol, user_id, db, personalized, proposed_investment_amount),
                 timeout=float(settings.AI_ANALYSIS_TIMEOUT_SECONDS)
             )
 
@@ -102,7 +113,9 @@ class Orchestrator:
         self,
         symbol: str,
         user_id: Optional[str] = None,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
+        personalized: bool = True,
+        proposed_investment_amount: Optional[float] = None
     ) -> Dict[str, Any]:
         start_time = time.time()
         canon_symbol = data_service.normalize_symbol(symbol)
@@ -133,7 +146,7 @@ class Orchestrator:
             "risk": results[5],
         }
 
-        # 2. Run Synthesis layer
+        # 2. Run Synthesis layer (Investment Quality Assessment)
         synthesis_res: SynthesisOutput = await asyncio.to_thread(
             synthesis_agent.synthesize, canon_symbol, user_id, agent_outputs
         )
@@ -141,7 +154,7 @@ class Orchestrator:
         total_latency_ms = int((time.time() - start_time) * 1000)
         analysis_id = f"ANL-{uuid.uuid4().hex[:12].upper()}"
 
-        # 3. Format response aligned with AnalysisResponse schema
+        # 3. Format specialist agent outputs
         agents_dict = {}
         for name, out in agent_outputs.items():
             agents_dict[name] = out.model_dump()
@@ -175,6 +188,60 @@ class Orchestrator:
             {"stage": "Synthesized Verdict", "status": synthesis_res.final_decision.value, "impact": f"{synthesis_res.net_score:+d}"}
         ]
 
+        # 4. Phase 4 Intelligence Engines
+        # A. Investment Assessment (Distinct from suitability)
+        investment_assessment = {
+            "verdict": synthesis_res.final_decision.value,
+            "net_score": synthesis_res.net_score,
+            "confidence": synthesis_res.confidence,
+            "methodology_version": getattr(synthesis_res, "methodology_version", "v3.1.0"),
+            "decision_traceability": getattr(synthesis_res, "decision_traceability", {}),
+            "summary": synthesis_res.summary
+        }
+
+        # B. AI Debate Multi-Agent Disagreement
+        debate_result = debate_engine.analyze_disagreements(canon_symbol, agent_outputs)
+
+        # C. Investment Thesis & Invalidation
+        thesis_result = thesis_engine.generate_thesis(canon_symbol, synthesis_res.model_dump(), agent_outputs)
+
+        # D. Counterfactual Sensitivity
+        counterfactual_scenarios = counterfactual_engine.run_counterfactual_scenarios(
+            canon_symbol,
+            synthesis_res.net_score,
+            synthesis_res.final_decision.value,
+            agent_outputs
+        )
+
+        # E. Investor Suitability Assessment (Evaluated if personalized)
+        suitability_result = None
+        is_personalized_flag = False
+        prof_version = None
+
+        if personalized and user_id and db:
+            is_personalized_flag = True
+            try:
+                user_profile = profile_engine.get_full_profile(db, user_id)
+                prof_version = user_profile.get("profile_version", 1)
+                port_metrics = portfolio_service.get_user_portfolio_metrics(db, user_id)
+                
+                quote_data = market_data_service.get_quote(canon_symbol)
+                asset_profile = {
+                    "sector": quote_data.sector if quote_data else "General",
+                    "volatility": 25.0,
+                    "beta": float(getattr(quote_data, "beta", 1.0) or 1.0) if quote_data else 1.0,
+                    "asset_class": "Equity"
+                }
+                suitability_result = suitability_engine.evaluate_suitability(
+                    canon_symbol,
+                    asset_profile=asset_profile,
+                    investor_profile=user_profile,
+                    portfolio_summary=port_metrics,
+                    proposed_investment_amount=proposed_investment_amount
+                )
+            except Exception as e:
+                print(f"Suitability evaluation exception: {e}")
+
         response_dict: Dict[str, Any] = {
             "analysis_id": analysis_id,
             "symbol": canon_symbol,
@@ -193,14 +260,19 @@ class Orchestrator:
                 "score": agent_outputs["risk"].impact_score if agent_outputs["risk"].impact_score < 0 else agent_outputs["fundamental"].impact_score
             },
             "decision_trace": decision_trace,
-            "counterfactuals": [
-                "Technical momentum confirms above 50-day moving average" if agent_outputs["technical"].impact_score < 0 else "Maintain current risk parameters",
-                "Regulatory compliance inquiries are clarified by exchange circulars"
-            ],
-            "thesis_invalidation": [
-                "Quarterly operating cash flow conversion deteriorates below historical averages",
-                "Broad market volatility index spikes significantly above current levels"
-            ],
+            
+            # Phase 4 Structured Outputs
+            "is_personalized": is_personalized_flag,
+            "profile_version": prof_version,
+            "investment_assessment": investment_assessment,
+            "suitability_assessment": suitability_result,
+            "ai_debate": debate_result,
+            "investment_thesis": thesis_result,
+            "counterfactual_scenarios": counterfactual_scenarios,
+
+            # Backward-compatible fields
+            "counterfactuals": [sc["scenario_name"] for sc in counterfactual_scenarios],
+            "thesis_invalidation": thesis_result.get("invalidation_conditions", []),
             "stock_switcher": [],
             "explanation": synthesis_res.interpretation,
             "uncertainty": synthesis_res.uncertainty,
@@ -209,7 +281,7 @@ class Orchestrator:
             "warnings": synthesis_res.warnings
         }
 
-        # 4. Database Persistence (Audit Trail)
+        # 5. Database Persistence (Audit Trail & Versioned Thesis)
         if db and user_id:
             try:
                 analysis_record = AnalysisRun(
@@ -224,6 +296,13 @@ class Orchestrator:
                     conflict_level=synthesis_res.conflict_report.conflict_level,
                     model_provider=synthesis_res.model_provider,
                     execution_time_ms=total_latency_ms,
+                    is_personalized=is_personalized_flag,
+                    profile_version=prof_version,
+                    suitability_verdict=suitability_result["classification"] if suitability_result else None,
+                    suitability_json=suitability_result,
+                    debate_json=debate_result,
+                    thesis_json=thesis_result,
+                    counterfactuals_json=counterfactual_scenarios,
                     full_json=response_dict
                 )
                 db.add(analysis_record)
@@ -246,10 +325,20 @@ class Orchestrator:
                     )
                     db.add(agent_record)
 
+                # Persist thesis record
+                thesis_record = InvestmentThesisRecord(
+                    id=f"THS-{uuid.uuid4().hex[:10].upper()}",
+                    analysis_id=analysis_id,
+                    user_id=user_id,
+                    symbol=canon_symbol,
+                    version=thesis_result.get("version", "1.0"),
+                    thesis_json=thesis_result
+                )
+                db.add(thesis_record)
+
                 db.commit()
             except Exception as e:
                 db.rollback()
-                # Log error without failing analysis return
                 print(f"Failed to persist analysis audit run: {e}")
 
         return response_dict
@@ -258,7 +347,9 @@ class Orchestrator:
         self,
         symbol: str,
         user_id: Optional[str] = None,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
+        personalized: bool = True,
+        proposed_investment_amount: Optional[float] = None
     ) -> Dict[str, Any]:
         """Synchronous bridge to aanalyze_stock."""
         try:
@@ -269,9 +360,10 @@ class Orchestrator:
         if loop and loop.is_running():
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                return pool.submit(lambda: asyncio.run(self.aanalyze_stock(symbol, user_id, db))).result()
+                return pool.submit(lambda: asyncio.run(self.aanalyze_stock(symbol, user_id, db, personalized, proposed_investment_amount))).result()
         else:
-            return asyncio.run(self.aanalyze_stock(symbol, user_id, db))
+            return asyncio.run(self.aanalyze_stock(symbol, user_id, db, personalized, proposed_investment_amount))
 
 
 orchestrator = Orchestrator()
+

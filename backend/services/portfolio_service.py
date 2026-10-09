@@ -232,5 +232,150 @@ class PortfolioService:
         """Compatibility helper returning holdings list."""
         return self.get_user_portfolio_metrics(db, user_id)
 
+    def analyze_portfolio_composition(
+        self,
+        db: Session,
+        user_id: str,
+        portfolio_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Advanced portfolio composition intelligence.
+        Computes deterministic concentration metrics (HHI, Top 3/5 concentration, sector counts),
+        and verifies drift against user-defined target allocations without fabricating missing targets.
+        """
+        from backend.database.models import InvestorProfile
+
+        metrics = self.get_user_portfolio_metrics(db, user_id, portfolio_id)
+        holdings = metrics.get("holdings", [])
+        total_value = float(metrics.get("total_portfolio_value", 0.0))
+        sector_exposure = metrics.get("sector_exposure", {})
+
+        # 1. Sorted position weights
+        sorted_holdings = sorted(holdings, key=lambda x: x.get("portfolio_weight_pct", 0.0), reverse=True)
+        top3_weight = round(sum(h.get("portfolio_weight_pct", 0.0) for h in sorted_holdings[:3]), 2)
+        top5_weight = round(sum(h.get("portfolio_weight_pct", 0.0) for h in sorted_holdings[:5]), 2)
+
+        # 2. Herfindahl-Hirschman Index (HHI)
+        # Sum of squared portfolio weights (0 to 10,000 scale)
+        hhi = round(sum((h.get("portfolio_weight_pct", 0.0)) ** 2 for h in holdings), 2)
+        if hhi < 1500:
+            hhi_category = "WELL_DIVERSIFIED"
+        elif hhi <= 2500:
+            hhi_category = "MODERATELY_CONCENTRATED"
+        else:
+            hhi_category = "HIGHLY_CONCENTRATED"
+
+        # 3. Target Allocation Drift (Honest handling: only if explicitly defined by user)
+        drift_report = None
+        prof = db.query(InvestorProfile).filter(InvestorProfile.user_id == user_id).first()
+        target_allocations = getattr(prof, "target_allocations", None) or {}
+
+        if target_allocations and isinstance(target_allocations, dict) and len(target_allocations) > 0:
+            drift_items = []
+            for category, target_pct in target_allocations.items():
+                target_f = float(target_pct)
+                actual_f = float(sector_exposure.get(category, 0.0))
+                drift_f = round(actual_f - target_f, 2)
+                drift_items.append({
+                    "category": category,
+                    "target_pct": target_f,
+                    "actual_pct": actual_f,
+                    "drift_pct": drift_f,
+                    "status": "OVERWEIGHT" if drift_f > 5.0 else ("UNDERWEIGHT" if drift_f < -5.0 else "ON_TARGET")
+                })
+            drift_report = {
+                "has_targets": True,
+                "allocations": drift_items
+            }
+
+        return {
+            "portfolio_id": metrics.get("portfolio_id"),
+            "total_value": total_value,
+            "holdings_count": len(holdings),
+            "top3_concentration_pct": top3_weight,
+            "top5_concentration_pct": top5_weight,
+            "hhi_index": hhi,
+            "hhi_category": hhi_category,
+            "sector_count": len(sector_exposure),
+            "sector_exposure": sector_exposure,
+            "position_weights": [
+                {
+                    "symbol": h.get("symbol"),
+                    "name": h.get("name"),
+                    "sector": h.get("sector"),
+                    "value": h.get("current_value"),
+                    "weight_pct": h.get("portfolio_weight_pct")
+                }
+                for h in sorted_holdings
+            ],
+            "target_allocation_drift": drift_report,
+            "health_score": metrics.get("health_score")
+        }
+
+    def calculate_pre_trade_impact(
+        self,
+        db: Session,
+        user_id: str,
+        symbol: str,
+        quantity: float,
+        price: float,
+        transaction_type: str = "BUY",
+        portfolio_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Simulates hypothetical trade on live portfolio in memory with ZERO database mutations.
+        Returns baseline vs projected concentration, weight changes, and sector changes.
+        """
+        symbol = symbol.strip().upper()
+        trade_val = round(abs(float(quantity) * float(price)), 2)
+        baseline = self.analyze_portfolio_composition(db, user_id, portfolio_id)
+        current_total = float(baseline.get("total_value", 0.0))
+
+        # Find existing position
+        pos_list = baseline.get("position_weights", [])
+        existing = next((p for p in pos_list if p["symbol"] == symbol), None)
+        curr_pos_val = float(existing["value"]) if existing else 0.0
+
+        quote = market_data_service.get_quote(symbol)
+        sec_name = quote.sector if quote and quote.sector else (existing["sector"] if existing else "General")
+
+        if transaction_type.upper() == "BUY":
+            proj_pos_val = curr_pos_val + trade_val
+            proj_total = current_total + trade_val
+        else:  # SELL
+            proj_pos_val = max(0.0, curr_pos_val - trade_val)
+            proj_total = max(0.01, current_total - trade_val)
+
+        proj_weight = round((proj_pos_val / max(0.01, proj_total)) * 100.0, 2)
+        curr_weight = float(existing["weight_pct"]) if existing else 0.0
+
+        # Projected sector exposure
+        curr_sector_val = (float(baseline.get("sector_exposure", {}).get(sec_name, 0.0)) / 100.0) * current_total
+        proj_sector_val = curr_sector_val + trade_val if transaction_type.upper() == "BUY" else max(0.0, curr_sector_val - trade_val)
+        proj_sector_pct = round((proj_sector_val / max(0.01, proj_total)) * 100.0, 2)
+
+        return {
+            "symbol": symbol,
+            "transaction_type": transaction_type.upper(),
+            "trade_amount": trade_val,
+            "baseline": {
+                "total_portfolio_value": current_total,
+                "position_weight_pct": curr_weight,
+                "sector": sec_name,
+                "sector_weight_pct": float(baseline.get("sector_exposure", {}).get(sec_name, 0.0)),
+                "hhi_index": baseline.get("hhi_index")
+            },
+            "projected": {
+                "total_portfolio_value": round(proj_total, 2),
+                "position_weight_pct": proj_weight,
+                "sector": sec_name,
+                "sector_weight_pct": proj_sector_pct,
+                "weight_delta_pct": round(proj_weight - curr_weight, 2),
+                "sector_delta_pct": round(proj_sector_pct - float(baseline.get("sector_exposure", {}).get(sec_name, 0.0)), 2)
+            },
+            "disclaimer": "Pre-trade impact simulation is purely illustrative and executes strictly in memory without altering real portfolio transactions."
+        }
+
 
 portfolio_service = PortfolioService()
+

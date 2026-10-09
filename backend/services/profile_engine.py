@@ -123,6 +123,11 @@ class ProfileEngine:
         investor_prof.risk_category = category
         investor_prof.max_stock_exposure_pct = max_exp
         investor_prof.avoided_sectors = profile_data.get("avoided_sectors", [])
+        investor_prof.target_allocations = profile_data.get("target_allocations", {})
+        investor_prof.liquidity_needs = profile_data.get("liquidity_needs")
+        investor_prof.investment_preferences = profile_data.get("investment_preferences", {})
+        investor_prof.profile_version = (investor_prof.profile_version or 1) + 1
+        investor_prof.is_complete = True
         investor_prof.onboarding_completed = True
 
         # Upsert Financial Profile
@@ -143,6 +148,8 @@ class ProfileEngine:
             "user_id": user_id,
             "risk_score": score,
             "risk_category": category,
+            "profile_version": investor_prof.profile_version,
+            "is_complete": True,
             "onboarding_completed": True,
             "max_stock_exposure_pct": max_exp
         }
@@ -154,32 +161,40 @@ class ProfileEngine:
         if not p_row:
             return {
                 "user_id": user_id,
+                "is_complete": False,
                 "onboarding_completed": False,
+                "profile_version": 1,
                 "country": "India",
                 "currency": "INR",
                 "market_preference": "NSE",
-                "experience_level": "Learning Investor",
+                "experience_level": None,
                 "past_assets": [],
-                "primary_goals": ["Wealth Growth"],
-                "primary_goal_top": "Wealth Growth",
-                "investment_horizon": "3–5 Years",
-                "loss_reaction": "Wait and monitor",
-                "volatility_comfort": 50,
-                "risk_score": 58,
-                "risk_category": "Balanced Growth",
-                "max_stock_exposure_pct": 25.0,
+                "primary_goals": [],
+                "primary_goal_top": None,
+                "investment_horizon": None,
+                "loss_reaction": None,
+                "volatility_comfort": None,
+                "risk_score": None,
+                "risk_category": None,
+                "max_stock_exposure_pct": 20.0,
+                "avoided_sectors": [],
+                "target_allocations": {},
+                "liquidity_needs": None,
+                "investment_preferences": {},
                 "financial": {
-                    "planned_investment": "₹25,000 – ₹1 Lakh",
-                    "current_invested": "₹25,000",
-                    "monthly_capacity": "₹5,000 – ₹15,000",
-                    "emergency_savings": "Yes",
+                    "planned_investment": None,
+                    "current_invested": None,
+                    "monthly_capacity": None,
+                    "emergency_savings": None,
                     "financial_obligations": []
                 }
             }
             
         return {
             "user_id": user_id,
+            "is_complete": bool(getattr(p_row, "is_complete", p_row.onboarding_completed)),
             "onboarding_completed": bool(p_row.onboarding_completed),
+            "profile_version": getattr(p_row, "profile_version", 1) or 1,
             "country": p_row.country,
             "currency": p_row.currency,
             "market_preference": p_row.market_preference,
@@ -193,11 +208,15 @@ class ProfileEngine:
             "risk_score": p_row.risk_score,
             "risk_category": p_row.risk_category,
             "max_stock_exposure_pct": p_row.max_stock_exposure_pct,
+            "avoided_sectors": p_row.avoided_sectors or [],
+            "target_allocations": getattr(p_row, "target_allocations", {}) or {},
+            "liquidity_needs": getattr(p_row, "liquidity_needs", None),
+            "investment_preferences": getattr(p_row, "investment_preferences", {}) or {},
             "financial": {
-                "planned_investment": f_row.planned_investment if f_row else "₹25,000 – ₹1 Lakh",
-                "current_invested": f_row.current_invested if f_row else "₹25,000",
-                "monthly_capacity": f_row.monthly_capacity if f_row else "₹5,000 – ₹15,000",
-                "emergency_savings": f_row.emergency_savings if f_row else "Yes",
+                "planned_investment": f_row.planned_investment if f_row else None,
+                "current_invested": f_row.current_invested if f_row else None,
+                "monthly_capacity": f_row.monthly_capacity if f_row else None,
+                "emergency_savings": f_row.emergency_savings if f_row else None,
                 "financial_obligations": f_row.financial_obligations if f_row else []
             }
         }
@@ -213,8 +232,10 @@ class ProfileEngine:
             if hasattr(investor_prof, key) and key not in ["user_id", "created_at"]:
                 setattr(investor_prof, key, val)
 
+        investor_prof.profile_version = (getattr(investor_prof, "profile_version", 1) or 1) + 1
         db.commit()
         return self.get_full_profile(db, user_id)
 
 
 profile_engine = ProfileEngine()
+

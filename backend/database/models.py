@@ -46,6 +46,15 @@ class User(Base):
     research_history: Mapped[List["ResearchHistory"]] = relationship(
         "ResearchHistory", back_populates="user", cascade="all, delete-orphan"
     )
+    goals: Mapped[List["Goal"]] = relationship(
+        "Goal", back_populates="user", cascade="all, delete-orphan"
+    )
+    saved_scenarios: Mapped[List["SavedScenario"]] = relationship(
+        "SavedScenario", back_populates="user", cascade="all, delete-orphan"
+    )
+    theses: Mapped[List["InvestmentThesisRecord"]] = relationship(
+        "InvestmentThesisRecord", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class InvestorProfile(Base):
@@ -69,6 +78,11 @@ class InvestorProfile(Base):
     explanation_style: Mapped[str] = mapped_column(String(50), default="Standard", nullable=False)
     max_stock_exposure_pct: Mapped[float] = mapped_column(Float, default=20.0, nullable=False)
     avoided_sectors: Mapped[Any] = mapped_column(JSON, default=list, nullable=False)
+    profile_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    target_allocations: Mapped[Any] = mapped_column(JSON, default=dict, nullable=False)
+    liquidity_needs: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    investment_preferences: Mapped[Any] = mapped_column(JSON, default=dict, nullable=False)
+    is_complete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -193,6 +207,13 @@ class AnalysisHistory(Base):
     conflict_level: Mapped[str] = mapped_column(String(32), default="LOW", nullable=False)
     model_provider: Mapped[str] = mapped_column(String(64), default="deterministic", nullable=False)
     execution_time_ms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_personalized: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    profile_version: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    suitability_verdict: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    suitability_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    debate_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    thesis_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    counterfactuals_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     full_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -280,4 +301,64 @@ class ResearchHistory(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="research_history")
+
+
+class Goal(Base):
+    __tablename__ = "goals"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"GOL-{uuid.uuid4().hex[:8].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    target_amount: Mapped[float] = mapped_column(Float, nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
+    target_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    monthly_contribution: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    portfolio_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("portfolios.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="goals")
+    portfolio: Mapped[Optional["Portfolio"]] = relationship("Portfolio")
+
+
+class SavedScenario(Base):
+    __tablename__ = "saved_scenarios"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"SCN-{uuid.uuid4().hex[:8].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    scenario_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "what_if" or "stress_test"
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    parameters_json: Mapped[Any] = mapped_column(JSON, default=dict, nullable=False)
+    results_json: Mapped[Any] = mapped_column(JSON, default=dict, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="saved_scenarios")
+
+
+class InvestmentThesisRecord(Base):
+    __tablename__ = "investment_theses"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"THS-{uuid.uuid4().hex[:8].upper()}")
+    analysis_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("analyses.id", ondelete="CASCADE"), index=True, nullable=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    version: Mapped[str] = mapped_column(String(20), default="1.0", nullable=False)
+    thesis_json: Mapped[Any] = mapped_column(JSON, default=dict, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="theses")
+    analysis: Mapped[Optional["AnalysisHistory"]] = relationship("AnalysisHistory")
+
 

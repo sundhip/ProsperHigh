@@ -13,7 +13,11 @@ import { DecisionTraceCard } from "@/components/DecisionTraceCard";
 import { CounterfactualCard } from "@/components/CounterfactualCard";
 import { ThesisInvalidationCard } from "@/components/ThesisInvalidationCard";
 import { StockSwitcherCard } from "@/components/StockSwitcherCard";
-import { Search, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { SuitabilityBadgeCard } from "@/components/SuitabilityBadgeCard";
+import { AIDebateCard } from "@/components/AIDebateCard";
+import { AnalysisComparisonModal } from "@/components/AnalysisComparisonModal";
+import { getAnalysisHistory } from "@/lib/api";
+import { Search, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, GitCompare } from "lucide-react";
 
 function AnalyzeContentV3() {
   const searchParams = useSearchParams();
@@ -29,6 +33,8 @@ function AnalyzeContentV3() {
   const [showMultiAgentDetails, setShowMultiAgentDetails] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [historyRuns, setHistoryRuns] = useState<any[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   const fetchAnalysisData = (sym: string) => {
     setLoading(true);
@@ -51,6 +57,8 @@ function AnalyzeContentV3() {
         clearInterval(stepTimer);
         setAnalysis(res);
         setLoading(false);
+        // Load history runs for comparison
+        getAnalysisHistory().then((hist) => setHistoryRuns(hist || []));
       })
       .catch((err: any) => {
         clearInterval(stepTimer);
@@ -117,6 +125,17 @@ function AnalyzeContentV3() {
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Analyze Company →</span>}
             </button>
+
+            {historyRuns.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowCompareModal(true)}
+                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 shadow-md transition-all whitespace-nowrap flex items-center justify-center space-x-1.5"
+              >
+                <GitCompare className="w-4 h-4 text-accent" />
+                <span>Compare Prior Run</span>
+              </button>
+            )}
           </div>
 
           {/* Real-time Search Dropdown */}
@@ -193,7 +212,7 @@ function AnalyzeContentV3() {
         </div>
       ) : analysis ? (
         <>
-          {/* 3. Top-Level Clean Suitability Decision */}
+          {/* 3. Top-Level Clean Decision Card */}
           <DecisionCard
             decision={analysis.final_decision}
             confidence={analysis.confidence}
@@ -202,6 +221,13 @@ function AnalyzeContentV3() {
             userName={analysis.user_name}
             explanation={analysis.explanation}
             llmProvider={analysis.llm_provider}
+          />
+
+          {/* Phase 4: Explicit Separation of Quality vs Personal Suitability */}
+          <SuitabilityBadgeCard
+            investmentAssessment={analysis.investment_assessment}
+            suitabilityAssessment={analysis.suitability_assessment}
+            symbol={analysis.symbol}
           />
 
           {/* Warnings & Uncertainty Callout */}
@@ -224,16 +250,6 @@ function AnalyzeContentV3() {
               ))}
             </div>
           )}
-
-          {/* 4. Personalized Portfolio Fit */}
-          <div className="prosper-card p-6 border-l-4 border-l-primary bg-slate-50">
-            <h3 className="text-base font-bold text-charcoal font-manrope mb-2">
-              Personalized Portfolio Suitability
-            </h3>
-            <p className="text-xs text-slate-700 leading-relaxed font-medium">
-              {analysis.explanation}
-            </p>
-          </div>
 
           {/* 5. Positive vs Negative Factors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -279,7 +295,11 @@ function AnalyzeContentV3() {
 
           {showMultiAgentDetails && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              {analysis.conflicts && <ConflictCard conflicts={analysis.conflicts} />}
+              {analysis.ai_debate ? (
+                <AIDebateCard aiDebate={analysis.ai_debate} />
+              ) : analysis.conflicts ? (
+                <ConflictCard conflicts={analysis.conflicts} />
+              ) : null}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AgentBoard agents={analysis.agents} onSelectAgent={(ag) => setSelectedAgent(ag)} />
@@ -303,6 +323,15 @@ function AnalyzeContentV3() {
           )}
 
           <AgentDetailDrawer agent={selectedAgent} onClose={() => setSelectedAgent(null)} />
+
+          {/* Analysis Comparison Modal */}
+          {showCompareModal && (
+            <AnalysisComparisonModal
+              currentAnalysisId={analysis.analysis_id || analysis.id || ""}
+              historyRuns={historyRuns}
+              onClose={() => setShowCompareModal(false)}
+            />
+          )}
         </>
       ) : null}
     </div>

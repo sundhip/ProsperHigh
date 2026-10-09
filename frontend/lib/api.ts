@@ -449,3 +449,240 @@ export async function getResearchDocuments(): Promise<any[]> {
     return [];
   }
 }
+
+// ----------------------------------------------------
+// PHASE 4: PERSONALIZATION & INTELLIGENCE API
+// ----------------------------------------------------
+
+export async function getPortfolioComposition(portfolioId?: string): Promise<any> {
+  const user = getStoredUser();
+  if (!user) return null;
+
+  try {
+    const url = portfolioId
+      ? `${API_BASE}/api/portfolio/composition?portfolio_id=${encodeURIComponent(portfolioId)}`
+      : `${API_BASE}/api/portfolio/composition`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function calculatePreTradeImpact(payload: {
+  symbol: string;
+  quantity: number;
+  price: number;
+  transaction_type?: string;
+  portfolio_id?: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/portfolio/pre-trade-impact`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Pre-trade simulation failed.");
+  }
+  return await res.json();
+}
+
+export async function simulateWhatIf(payload: {
+  actions: Array<{ action: string; symbol: string; quantity: number; price?: number }>;
+  portfolio_id?: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/portfolio/what-if`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "What-If simulation failed.");
+  }
+  return await res.json();
+}
+
+export async function runStressTest(payload: {
+  scenario_key?: string;
+  custom_market_shock_pct?: number;
+  custom_sector_shocks?: Record<string, number>;
+  portfolio_id?: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/portfolio/stress-test`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Stress test simulation failed.");
+  }
+  return await res.json();
+}
+
+export async function saveScenario(payload: {
+  name: string;
+  scenario_type: string;
+  parameters: any;
+  results: any;
+  description?: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/portfolio/scenarios`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to save scenario.");
+  }
+  return await res.json();
+}
+
+export async function listScenarios(scenarioType?: string): Promise<any[]> {
+  try {
+    const url = scenarioType
+      ? `${API_BASE}/api/portfolio/scenarios?scenario_type=${encodeURIComponent(scenarioType)}`
+      : `${API_BASE}/api/portfolio/scenarios`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.ok) return await res.json();
+    return [];
+  } catch (err) {
+    return [];
+  }
+}
+
+export async function deleteScenario(scenarioId: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/api/portfolio/scenarios/${encodeURIComponent(scenarioId)}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return res.ok;
+}
+
+// ----------------------------------------------------
+// GOALS API
+// ----------------------------------------------------
+
+export async function getGoals(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/goals/`, { headers: getAuthHeaders() });
+    if (res.ok) return await res.json();
+    return [];
+  } catch (err) {
+    return [];
+  }
+}
+
+export async function createGoal(payload: {
+  name: string;
+  target_amount: number;
+  target_date?: string;
+  category?: string;
+  priority?: string;
+  monthly_contribution?: number;
+  notes?: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/goals/`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to create goal.");
+  }
+  return await res.json();
+}
+
+export async function updateGoal(goalId: string, payload: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to update goal.");
+  }
+  return await res.json();
+}
+
+export async function deleteGoal(goalId: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return res.ok;
+}
+
+export async function getGoalProgress(goalId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}/progress`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+// ----------------------------------------------------
+// ANALYSIS SUB-RESOURCES & DEBATE / THESIS
+// ----------------------------------------------------
+
+export async function getAnalysisDebate(analysisId: string): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE}/api/analyze/${encodeURIComponent(analysisId)}/debate`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function getAnalysisThesis(analysisId: string): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE}/api/analyze/${encodeURIComponent(analysisId)}/thesis`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function compareAnalyses(runAId: string, runBId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/analyze/compare`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ run_a_id: runAId, run_b_id: runBId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to compare analysis runs.");
+  }
+  return await res.json();
+}
+
+export async function runCounterfactual(payload: {
+  symbol: string;
+  price_drop_pct?: number;
+  multiple_compression_pct?: number;
+  revenue_miss_pct?: number;
+  volatility_spike_pct?: number;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/analyze/counterfactual`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Counterfactual simulation failed.");
+  }
+  return await res.json();
+}
