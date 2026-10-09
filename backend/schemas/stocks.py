@@ -17,3 +17,7 @@ class StockSearchResponse(BaseModel):
 
 class MarketTickerResponse(BaseModel):
     ticker: List[StockQuote]
+    as_of: Optional[str] = None
+    status: Optional[str] = "Market Active"
+    provider: Optional[str] = "NSE Feed"
+

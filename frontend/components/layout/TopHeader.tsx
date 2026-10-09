@@ -10,11 +10,15 @@ export const TopHeader: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<UserSession | null>(null);
   const [ticker, setTicker] = useState<any[]>([]);
+  const [tickerInfo, setTickerInfo] = useState<{ as_of?: string; status?: string; provider?: string }>({});
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setUser(getStoredUser());
-    getLiveTicker().then((res) => setTicker(res.ticker || []));
+    getLiveTicker().then((res) => {
+      setTicker(res.ticker || []);
+      setTickerInfo({ as_of: res.as_of, status: res.status, provider: res.provider });
+    });
 
     const handleAuth = () => setUser(getStoredUser());
     window.addEventListener("auth-changed", handleAuth);
@@ -35,7 +39,7 @@ export const TopHeader: React.FC = () => {
       <div className="bg-slate-950 px-4 py-1.5 border-b border-slate-800/80 flex items-center justify-between text-[11px] overflow-x-auto whitespace-nowrap scrollbar-none">
         <div className="flex items-center space-x-2 shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-bold text-slate-400 uppercase tracking-wider">Market Status: ● Open</span>
+          <span className="font-bold text-slate-400 uppercase tracking-wider">{tickerInfo.status || "Market Feed Active"}</span>
         </div>
 
         <div className="flex items-center space-x-6 mx-4 font-mono font-medium">
@@ -52,7 +56,7 @@ export const TopHeader: React.FC = () => {
         </div>
 
         <div className="text-[10px] text-slate-400 shrink-0 font-sans">
-          LIVE • Updated 12s ago
+          {tickerInfo.as_of ? `${tickerInfo.as_of} • ${tickerInfo.provider || "NSE"}` : "NSE Live Feed"}
         </div>
       </div>
 

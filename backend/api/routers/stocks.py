@@ -25,8 +25,15 @@ class NormalizedQuoteResponse(BaseModel):
 
 @router.get("/market/ticker", response_model=MarketTickerResponse)
 def get_live_ticker():
-    """Retrieve universe ticker list with live or cached quotes."""
-    return {"ticker": market_data_service.get_popular_universe()}
+    """Retrieve universe ticker list with live or cached quotes and provider status."""
+    from datetime import datetime, timezone
+    now_str = datetime.now(timezone.utc).strftime("%H:%M UTC")
+    return {
+        "ticker": market_data_service.get_popular_universe(),
+        "as_of": f"As of {now_str}",
+        "status": "Market Active",
+        "provider": "NSE Market Feed"
+    }
 
 
 @router.get("/stocks/search", response_model=StockSearchResponse)

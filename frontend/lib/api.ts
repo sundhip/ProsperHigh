@@ -320,7 +320,7 @@ export async function importPortfolioCSV(
 // ----------------------------------------------------
 // MARKET & STOCKS API
 // ----------------------------------------------------
-export async function getLiveTicker(): Promise<{ ticker: any[] }> {
+export async function getLiveTicker(): Promise<{ ticker: any[]; as_of?: string; status?: string; provider?: string }> {
   try {
     const res = await fetch(`${API_BASE}/api/market/ticker`);
     if (res.ok) return await res.json();
