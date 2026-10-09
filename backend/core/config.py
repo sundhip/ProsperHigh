@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
     MAX_REQUEST_BODY_SIZE_BYTES: int = 5 * 1024 * 1024  # 5MB
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
 
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True

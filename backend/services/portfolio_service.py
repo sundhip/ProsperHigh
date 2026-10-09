@@ -29,9 +29,15 @@ class PortfolioService:
                 is_default=True,
                 status="active"
             )
-            db.add(port)
-            db.commit()
-            db.refresh(port)
+            try:
+                db.add(port)
+                db.commit()
+                db.refresh(port)
+            except Exception:
+                db.rollback()
+                port = db.query(Portfolio).filter(Portfolio.user_id == user_id, Portfolio.is_default == True).first()
+                if not port:
+                    port = db.query(Portfolio).filter(Portfolio.user_id == user_id).first()
 
         return port
 

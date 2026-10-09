@@ -13,6 +13,11 @@ class UserLoginRequest(BaseModel):
     password: str = Field(..., description="Account password")
 
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str = Field(..., min_length=10, description="Google OpenID Connect ID Token")
+
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

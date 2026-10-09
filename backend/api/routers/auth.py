@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.api.deps import get_db, get_current_user
 from backend.database.models import User
-from backend.schemas.auth import UserRegisterRequest, UserLoginRequest, AuthResponse, UserResponse
+from backend.schemas.auth import UserRegisterRequest, UserLoginRequest, GoogleAuthRequest, AuthResponse, UserResponse
 from backend.services.auth_service import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -20,6 +20,13 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
 def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
     """Authenticate with email and password, returning JWT and user session data."""
     res = auth_service.login_user(db, payload.email, payload.password)
+    return res
+
+
+@router.post("/google", response_model=AuthResponse)
+def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """Authenticate or register user via verified Google OpenID Connect ID token."""
+    res = auth_service.authenticate_google_user(db, payload.id_token)
     return res
 
 

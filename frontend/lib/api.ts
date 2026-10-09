@@ -57,6 +57,32 @@ export async function loginUser(
   }
 }
 
+export async function googleSignIn(
+  idToken: string
+): Promise<{ success: boolean; user?: any; is_new_user?: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token: idToken }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const errorMsg = data.detail || "Google authentication failed.";
+      return { success: false, error: errorMsg };
+    }
+
+    if (data.user) {
+      setStoredUser(data.user);
+      return { success: true, user: data.user, is_new_user: data.is_new_user };
+    }
+    return { success: false, error: "Unexpected response format from server." };
+  } catch (err: any) {
+    return { success: false, error: "Backend service is unreachable. Please ensure the API is running." };
+  }
+}
+
 // ----------------------------------------------------
 // ONBOARDING & PROFILE API
 // ----------------------------------------------------
