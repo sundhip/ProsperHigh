@@ -18,6 +18,9 @@ class DocumentChunkDto:
         self.metadata = metadata or {}
 
 
+ChunkDTO = DocumentChunkDto
+
+
 class SectionChunker:
     """
     Section-aware document chunker for annual reports, earnings calls,

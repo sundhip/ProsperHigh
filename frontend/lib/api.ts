@@ -404,17 +404,35 @@ export async function getAnalysisById(analysisId: string): Promise<any | null> {
 // ----------------------------------------------------
 // RESEARCH TERMINAL API
 // ----------------------------------------------------
-export async function askResearch(symbol: string, query: string): Promise<any> {
+export async function askResearch(
+  symbol: string,
+  query: string,
+  options?: {
+    documentType?: string;
+    year?: string;
+    reportingPeriod?: string;
+    sessionId?: string;
+  }
+): Promise<any> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const authHeaders = getAuthHeaders();
   if (authHeaders["Authorization"]) {
     headers["Authorization"] = authHeaders["Authorization"];
   }
 
+  const payload: any = {
+    symbol: symbol.toUpperCase().trim(),
+    query,
+  };
+  if (options?.documentType) payload.document_type = options.documentType;
+  if (options?.year) payload.year = options.year;
+  if (options?.reportingPeriod) payload.reporting_period = options.reportingPeriod;
+  if (options?.sessionId) payload.session_id = options.sessionId;
+
   const res = await fetch(`${API_BASE}/api/research/ask`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ symbol: symbol.toUpperCase().trim(), query }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
@@ -685,4 +703,72 @@ export async function runCounterfactual(payload: {
     throw new Error(err.detail || "Counterfactual simulation failed.");
   }
   return await res.json();
+}
+
+// ----------------------------------------------------
+// PHASE 5: RESEARCH TERMINAL & DOCUMENT READER API
+// ----------------------------------------------------
+
+export async function getDocumentById(docId: string): Promise<any | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/research/documents/${encodeURIComponent(docId)}`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function inspectCitation(chunkId: string): Promise<any | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/research/citations/${encodeURIComponent(chunkId)}`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function uploadResearchDocument(
+  file: File,
+  company: string,
+  documentType: string = "Corporate Disclosure"
+): Promise<any> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("company", company.toUpperCase().trim());
+  formData.append("document_type", documentType);
+
+  const authHeaders = getAuthHeaders();
+  const headers: Record<string, string> = {};
+  if (authHeaders["Authorization"]) {
+    headers["Authorization"] = authHeaders["Authorization"];
+  }
+
+  const res = await fetch(`${API_BASE}/api/research/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to upload document.");
+  }
+
+  return await res.json();
+}
+
+export async function getDriveStatus(): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE}/api/research/drive/status`);
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
 }

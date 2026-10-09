@@ -55,6 +55,9 @@ class User(Base):
     theses: Mapped[List["InvestmentThesisRecord"]] = relationship(
         "InvestmentThesisRecord", back_populates="user", cascade="all, delete-orphan"
     )
+    uploaded_documents: Mapped[List["Document"]] = relationship(
+        "Document", back_populates="uploader"
+    )
 
 
 class InvestorProfile(Base):
@@ -254,17 +257,52 @@ class Document(Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     source: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     company: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
     document_type: Mapped[str] = mapped_column(String(50), index=True, default="Annual Report", nullable=False)
     year: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    reporting_period: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    publication_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    jurisdiction: Mapped[str] = mapped_column(String(20), default="IN", nullable=False)
+    content_hash: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
+    file_size_bytes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    mime_type: Mapped[Optional[str]] = mapped_column(String(50), default="text/plain", nullable=True)
+    parser_version: Mapped[str] = mapped_column(String(20), default="1.0", nullable=False)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_user_uploaded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    user_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     page_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     version: Mapped[str] = mapped_column(String(20), default="1.0", nullable=False)
-    status: Mapped[str] = mapped_column(String(32), default="INDEXED", nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="INDEXED", nullable=False)  # PENDING, PARSING, INDEXING, INDEXED, FAILED
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+    uploader: Mapped[Optional["User"]] = relationship("User", back_populates="uploaded_documents")
     chunks: Mapped[List["DocumentChunk"]] = relationship(
         "DocumentChunk", back_populates="document", cascade="all, delete-orphan"
     )
+    versions: Mapped[List["DocumentVersion"]] = relationship(
+        "DocumentVersion", back_populates="document", cascade="all, delete-orphan"
+    )
+
+
+class DocumentVersion(Base):
+    __tablename__ = "document_versions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"VER-{uuid.uuid4().hex[:12].upper()}")
+    document_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("documents.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    version_number: Mapped[str] = mapped_column(String(20), default="1.0", nullable=False)
+    source_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    parsed_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    change_notes: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    document: Mapped["Document"] = relationship("Document", back_populates="versions")
 
 
 class DocumentChunk(Base):
@@ -278,6 +316,8 @@ class DocumentChunk(Base):
     section: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     page_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    chunk_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    token_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     embedding_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     metadata_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -293,10 +333,12 @@ class ResearchHistory(Base):
         String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
     )
     symbol: Mapped[Optional[str]] = mapped_column(String(30), index=True, nullable=True)
+    session_id: Mapped[Optional[str]] = mapped_column(String(64), index=True, nullable=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, default=0.85, nullable=False)
     citations_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    evidence_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     filters_json: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

@@ -146,6 +146,28 @@ class Orchestrator:
             "risk": results[5],
         }
 
+        # Enrich specialist agent findings with verified statutory filing evidence from RAG
+        try:
+            from backend.services.rag.service import rag_service
+            from backend.schemas.agent_contracts import EvidenceItem
+            from datetime import datetime
+            rag_ev = rag_service.retrieve_evidence(canon_symbol, "financial results, capital allocation, and regulatory compliance", max_chunks=2)
+            if rag_ev:
+                for ev in rag_ev:
+                    ev_item = EvidenceItem(
+                        claim=f"Statutory Disclosure: {ev.get('title')} ({ev.get('section', 'General')})",
+                        source=ev.get("citation", "Official Corporate Disclosure"),
+                        metric_value=ev.get("excerpt", "")[:120],
+                        timestamp=datetime.now().isoformat(),
+                        reference=ev.get("source_url") or ev.get("citation")
+                    )
+                    if "regulatory" in agent_outputs and agent_outputs["regulatory"].status == AgentStatus.SUCCESS:
+                        agent_outputs["regulatory"].evidence.append(ev_item)
+                    if "fundamental" in agent_outputs and agent_outputs["fundamental"].status == AgentStatus.SUCCESS:
+                        agent_outputs["fundamental"].evidence.append(ev_item)
+        except Exception:
+            pass
+
         # 2. Run Synthesis layer (Investment Quality Assessment)
         synthesis_res: SynthesisOutput = await asyncio.to_thread(
             synthesis_agent.synthesize, canon_symbol, user_id, agent_outputs
