@@ -72,4 +72,7 @@ class SynthesisOutput(BaseModel):
     agent_outputs: Dict[str, AgentOutput] = Field(default_factory=dict)
     execution_time_ms: int = 0
     model_provider: str = "deterministic"
+    methodology_version: str = "v3.1.0"
+    decision_traceability: Dict[str, Any] = Field(default_factory=dict)
     warnings: List[str] = Field(default_factory=list)
+

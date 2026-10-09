@@ -12,6 +12,7 @@ from backend.schemas.agent_contracts import (
     SynthesisOutput
 )
 from backend.services.conflict_service import conflict_service
+from backend.services.decision_engine import decision_engine
 from backend.services.ai_provider.service import ai_provider_service
 from backend.services.ai_provider.base import ModelRequest
 
@@ -72,27 +73,18 @@ class SynthesisAgent:
             signals_breakdown=signals_map
         )
 
-        # 3. Sum net impact scores and derive decision
-        net_score = sum(agent.impact_score for agent in valid_agents.values())
-        if net_score >= 12:
-            final_decision = SignalType.BUY
-        elif net_score >= -4:
-            final_decision = SignalType.HOLD
-        else:
-            final_decision = SignalType.AVOID
-
-        # Calculate confidence (base 85%, penalize for conflicts and missing agents)
-        confidence = 88
-        if conflict_report.conflict_level == "HIGH":
-            confidence -= 15
-        elif conflict_report.conflict_level == "MODERATE":
-            confidence -= 8
-
-        if missing_agents:
-            confidence -= (len(missing_agents) * 6)
-        if failed_agents:
-            confidence -= (len(failed_agents) * 10)
-        confidence = max(20, min(95, confidence))
+        # 3. Deterministic Decision Engine (Independent of LLM synthesis prompt)
+        decision_result = decision_engine.evaluate(
+            symbol=symbol,
+            valid_agents=valid_agents,
+            conflict_report=conflict_report,
+            missing_agents=missing_agents,
+            failed_agents=failed_agents
+        )
+        final_decision = decision_result.final_decision
+        net_score = decision_result.net_score
+        confidence = decision_result.confidence
+        decision_traceability = decision_result.traceability
 
         # 4. Aggregate strictly verified evidence
         all_evidence: List[EvidenceItem] = []
@@ -186,6 +178,8 @@ class SynthesisAgent:
             agent_outputs=agent_outputs,
             execution_time_ms=latency_ms,
             model_provider=provider_name,
+            methodology_version=decision_result.methodology_version,
+            decision_traceability=decision_traceability,
             warnings=warnings
         )
 

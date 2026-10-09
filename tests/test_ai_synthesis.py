@@ -88,3 +88,58 @@ def test_synthesis_evidence_traceability():
     assert len(res.evidence) == 1
     assert res.evidence[0].claim == ev.claim
     assert res.evidence[0].source == ev.source
+
+
+def test_decision_engine_deterministic_traceability():
+    """Verify decision engine calculates scores deterministically with methodology version and traceability."""
+    from backend.services.decision_engine import decision_engine
+    from backend.schemas.agent_contracts import ConflictReport
+
+    outputs = {
+        "Fundamental": AgentOutput(
+            agent_name="Fundamental",
+            symbol="TEST",
+            signal=SignalType.BUY,
+            impact_score=8,
+            summary="Strong earnings."
+        ),
+        "Technical": AgentOutput(
+            agent_name="Technical",
+            symbol="TEST",
+            signal=SignalType.BUY,
+            impact_score=6,
+            summary="Upward momentum."
+        ),
+        "Risk": AgentOutput(
+            agent_name="Risk",
+            symbol="TEST",
+            signal=SignalType.HOLD,
+            impact_score=0,
+            summary="Moderate exposure."
+        )
+    }
+
+    conflict = ConflictReport(
+        conflict_level="LOW",
+        badge="Agreement",
+        summary="Signals aligned."
+    )
+
+    decision_res = decision_engine.evaluate(
+        symbol="TEST",
+        valid_agents=outputs,
+        conflict_report=conflict,
+        missing_agents=[],
+        failed_agents=[]
+    )
+
+    assert decision_res.methodology_version == "v3.1.0"
+    assert decision_res.final_decision == SignalType.BUY
+    assert decision_res.confidence >= 80
+    assert "agent_evaluations" in decision_res.traceability
+    assert len(decision_res.traceability["agent_evaluations"]) == 3
+    # Check that weights were applied: Fundamental weight is 1.5 (8 * 1.5 = 12.0)
+    fund_eval = next(e for e in decision_res.traceability["agent_evaluations"] if e["agent"] == "Fundamental")
+    assert fund_eval["weight"] == 1.5
+    assert fund_eval["weighted_impact"] == 12.0
+
