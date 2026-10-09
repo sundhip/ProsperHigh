@@ -10,16 +10,12 @@ import { useExperience } from "@/components/ExperienceProvider";
 import {
   Search,
   Bell,
-  TrendingUp,
-  TrendingDown,
-  Sun,
-  Moon,
-  ShieldCheck,
-  ChevronRight,
   Clock,
   Sparkles,
   Command,
-  X
+  X,
+  TrendingUp,
+  TrendingDown
 } from "lucide-react";
 
 export const TopHeader: React.FC = () => {
@@ -31,7 +27,7 @@ export const TopHeader: React.FC = () => {
   const [user, setUser] = useState<UserSession | null>(null);
   const [ticker, setTicker] = useState<any[]>([]);
   const [tickerInfo, setTickerInfo] = useState<{ as_of?: string; status?: string; provider?: string }>({});
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -88,8 +84,10 @@ export const TopHeader: React.FC = () => {
     setSearchOpen(false);
   };
 
-  const getBreadcrumbName = (path: string) => {
-    if (path === "/") return "Dashboard";
+  const getPageTitle = (path: string) => {
+    if (path === "/") {
+      return user ? `Welcome back, ${user.name?.split(" ")[0] || "Investor"}` : "Dashboard";
+    }
     const segment = path.split("/")[1] || "";
     switch (segment) {
       case "portfolio": return "Portfolio Workspace";
@@ -99,94 +97,59 @@ export const TopHeader: React.FC = () => {
       case "market-intelligence": return "Market Intelligence";
       case "research": return "Research Terminal";
       case "decisions": case "history": return "Decisions & History";
-      case "alerts": return "Alerts";
+      case "alerts": return "Alerts & Notifications";
       case "profile": return "Investor Profile";
-      case "settings": return "Settings";
+      case "settings": return "Settings & Preferences";
       case "help": return "Help & Documentation";
       default: return segment.charAt(0).toUpperCase() + segment.slice(1);
     }
   };
 
   return (
-    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20 transition-colors">
-      {/* 1. Market Ticker Strip */}
-      <div className="bg-slate-50 dark:bg-slate-950 px-4 py-1 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] overflow-x-auto whitespace-nowrap">
-        <div className="flex items-center space-x-2 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider text-[10px]">
-            {tickerInfo.status || "Market Feed"}
-          </span>
+    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md pb-2 pt-1 transition-colors">
+      {/* 1. Main Navigation Bar with greeting, pill search, and controls */}
+      <div className="flex items-center justify-between gap-4 py-2 px-1">
+        {/* Left Page Title / Greeting (Ref A & C) */}
+        <div className="min-w-0 pl-10 md:pl-0">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight font-display text-primary truncate">
+            {getPageTitle(pathname)}
+          </h1>
+          <p className="text-xs text-secondary-muted hidden sm:block truncate mt-0.5">
+            {pathname === "/" ? "Unified portfolio, multi-agent intelligence, and market feed" : "Real-time decision intelligence"}
+          </p>
         </div>
 
-        <div className="flex items-center space-x-5 mx-4 font-mono font-medium">
-          {ticker.map((item) => (
-            <div
-              key={item.symbol}
-              className="inline-flex items-center space-x-1.5 cursor-pointer hover:text-[#C9A96E] dark:hover:text-sky-400 transition-colors"
-              onClick={() => router.push(`/analyze?symbol=${item.symbol}`)}
-            >
-              <span className="font-bold text-slate-800 dark:text-slate-200">{item.symbol}</span>
-              <span className="text-slate-600 dark:text-slate-400 tabular-nums">₹{item.price}</span>
-              <span
-                className={`flex items-center text-[10px] font-bold tabular-nums ${
-                  item.change_pct >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                }`}
-              >
-                {item.change_pct >= 0 ? "+" : ""}{item.change_pct}%
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 flex items-center space-x-1 font-sans">
-          <Clock className="w-3 h-3 inline mr-1" />
-          <span>{tickerInfo.as_of ? `${tickerInfo.as_of}` : "Live Feed"}</span>
-        </div>
-      </div>
-
-      {/* 2. Main Navigation Bar */}
-      <div className="px-5 py-2.5 flex items-center justify-between gap-4">
-        {/* Context Breadcrumbs */}
-        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-          <Link href="/" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-            Home
-          </Link>
-          {pathname !== "/" && (
-            <>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
-              <span className="text-slate-900 dark:text-white font-bold">
-                {getBreadcrumbName(pathname)}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Global Search with Live Popover */}
-        <div ref={searchRef} className="relative max-w-md w-full hidden sm:block">
+        {/* Center: Pill Search Bar with ⌘K Hint (Ref B & D) */}
+        <div ref={searchRef} className="relative max-w-sm w-full hidden sm:block">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+            <Search className="w-4 h-4 text-secondary-muted absolute left-3.5 top-2.5 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => { if (searchResults.length > 0) setSearchOpen(true); }}
-              placeholder="Search universe, filings, or symbols (e.g. RELIANCE, TCS)..."
-              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-sky-500 transition-all"
+              placeholder="Search anything (TCS, RELIANCE)..."
+              className="w-full bg-surface-elevated border border-border-subtle rounded-full pl-9 pr-14 py-2 text-xs text-primary placeholder-secondary-muted focus:outline-none focus:ring-2 focus:ring-accent transition-all"
             />
-            {searchQuery && (
+            {searchQuery ? (
               <button
                 onClick={() => { setSearchQuery(""); setSearchResults([]); setSearchOpen(false); }}
-                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-3.5 top-2.5 text-secondary-muted hover:text-primary"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
+            ) : (
+              <div className="absolute right-3 top-2 flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full bg-surface text-[10px] text-secondary-muted border border-border-subtle pointer-events-none">
+                <Command className="w-2.5 h-2.5" />
+                <span>K</span>
+              </div>
             )}
           </div>
 
-          {/* Search Results Popover */}
+          {/* Search Results Floating Card (Ref B) */}
           {searchOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
-              <div className="p-2 border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-border-subtle rounded-2xl shadow-2xl overflow-hidden z-50 max-h-80 overflow-y-auto">
+              <div className="p-2.5 border-b border-border-subtle text-[10px] font-bold text-secondary-muted uppercase tracking-wider">
                 Matching Instruments
               </div>
               {searchResults.length > 0 ? (
@@ -194,20 +157,20 @@ export const TopHeader: React.FC = () => {
                   <div
                     key={s.symbol}
                     onClick={() => handleSelectStock(s.symbol)}
-                    className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-between cursor-pointer transition-colors"
+                    className="p-3 hover:bg-surface-elevated flex items-center justify-between cursor-pointer transition-colors"
                   >
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">{s.symbol}</span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">{s.sector}</span>
+                        <span className="font-bold text-xs text-primary">{s.symbol}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-elevated text-secondary font-medium">{s.sector}</span>
                       </div>
-                      <div className="text-[11px] text-slate-400">{s.name}</div>
+                      <div className="text-[11px] text-secondary-muted mt-0.5">{s.name}</div>
                     </div>
                     {s.price && (
                       <div className="text-right">
-                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">₹{s.price}</div>
+                        <div className="text-xs font-mono font-bold text-primary tabular-nums">₹{s.price}</div>
                         {typeof s.change_pct === "number" && (
-                          <div className={`text-[10px] font-bold tabular-nums ${s.change_pct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                          <div className={`text-[10px] font-bold tabular-nums ${s.change_pct >= 0 ? "text-accent" : "text-negative"}`}>
                             {s.change_pct >= 0 ? "+" : ""}{s.change_pct}%
                           </div>
                         )}
@@ -216,7 +179,7 @@ export const TopHeader: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center text-xs text-slate-400">
+                <div className="p-4 text-center text-xs text-secondary-muted">
                   {isSearching ? "Searching universe..." : `No results found for "${searchQuery}"`}
                 </div>
               )}
@@ -224,66 +187,83 @@ export const TopHeader: React.FC = () => {
           )}
         </div>
 
-        {/* Header Right Actions */}
-        <div className="flex items-center space-x-2.5">
-          {/* Alerts Bell Link */}
+        {/* Right Header Controls: Mode pill, notification bell with red dot, avatar (Ref B & C) */}
+        <div className="flex items-center space-x-2 shrink-0">
+          {/* Experience Mode Toggle Pill */}
+          <button
+            onClick={() => setMode(isBeginner ? "advanced" : "beginner")}
+            className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full border border-border-subtle bg-surface hover:bg-surface-elevated text-xs font-semibold text-primary transition-colors"
+            title={isBeginner ? "Switch to Advanced Experience (Full Quant Detail)" : "Switch to Beginner Experience (Guided Views)"}
+            aria-label="Toggle Experience Mode"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isBeginner ? "text-accent-yellow" : "text-accent"}`} />
+            <span className="capitalize">{mode} Mode</span>
+          </button>
+
+          {/* Notifications Bell with dot (Ref B & C) */}
           <Link
             href="/alerts"
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors relative"
+            className="p-2.5 rounded-full bg-surface border border-border-subtle hover:bg-surface-elevated text-secondary transition-colors relative"
             title="View Alerts"
             aria-label="View Alerts"
           >
             <Bell className="w-4 h-4" />
+            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-negative rounded-full ring-2 ring-surface" />
           </Link>
 
-          {/* Experience Mode Toggle (Beginner vs Advanced) */}
-          <button
-            onClick={() => setMode(isBeginner ? "advanced" : "beginner")}
-            className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
-            title={isBeginner ? "Switch to Advanced Experience (Full Quant Detail)" : "Switch to Beginner Experience (Guided & Essential Views)"}
-            aria-label="Toggle Experience Mode"
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${isBeginner ? "text-[#C9A96E]" : "text-sky-500"}`} />
-            <span className="capitalize">{mode} Mode</span>
-          </button>
-
-          {/* Theme Switcher Button */}
-          <button
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-            title={resolvedTheme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            aria-label="Toggle theme"
-          >
-            {resolvedTheme === "dark" ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-600" />
-            )}
-          </button>
-
-          {/* User Profile Avatar Link */}
+          {/* User Profile Avatar Link (Ref C) */}
           {user ? (
             <Link
               href="/profile"
-              className="flex items-center space-x-2 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="flex items-center space-x-2 p-1 pl-1.5 rounded-full bg-surface border border-border-subtle hover:bg-surface-elevated transition-colors"
             >
-              <div className="w-7 h-7 rounded-full bg-slate-900 text-white dark:bg-sky-600 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-full bg-accent text-black flex items-center justify-center font-bold text-xs">
                 {user.name ? user.name[0].toUpperCase() : "U"}
               </div>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline">
+              <span className="text-xs font-bold text-primary hidden md:inline pr-2">
                 {user.name?.split(" ")[0] || "Account"}
               </span>
             </Link>
           ) : (
             <Link
               href="/login"
-              className="px-3 py-1.5 bg-slate-900 dark:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-sm"
+              className="px-4 py-2 bg-accent hover:bg-accent-hover text-black rounded-full text-xs font-extrabold shadow-sm transition-all"
             >
               Sign In
             </Link>
           )}
         </div>
       </div>
+
+      {/* 2. Slim Market Ticker Scrolling Chip Row (Ref A & D) */}
+      {ticker.length > 0 && (
+        <div className="mt-1 flex items-center space-x-2 overflow-x-auto py-1 scrollbar-none no-scrollbar">
+          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-surface border border-border-subtle text-[10px] font-bold text-secondary-muted shrink-0 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <span>{tickerInfo.status || "NSE Live"}</span>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            {ticker.map((item) => (
+              <div
+                key={item.symbol}
+                onClick={() => router.push(`/analyze?symbol=${item.symbol}`)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-surface border border-border-subtle hover:border-border-default cursor-pointer text-xs transition-colors shrink-0"
+              >
+                <span className="font-bold text-primary text-[11px]">{item.symbol}</span>
+                <span className="text-secondary tabular-nums text-[11px] font-mono">₹{item.price}</span>
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full tabular-nums ${
+                    item.change_pct >= 0 ? "bg-accent/10 text-accent" : "bg-negative/10 text-negative"
+                  }`}
+                >
+                  {item.change_pct >= 0 ? "+" : ""}{item.change_pct}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -84,16 +84,16 @@ export default function SignupPage() {
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
 
       <div className="text-center space-y-2">
-        <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto border border-primary/20">
+        <div className="w-12 h-12 bg-accent/15 text-accent rounded-2xl flex items-center justify-center mx-auto border border-accent/25">
           <Shield className="w-6 h-6 text-accent" />
         </div>
-        <h1 className="text-2xl font-extrabold text-charcoal font-manrope">Create Your ProsperHigh Account</h1>
-        <p className="text-xs text-slate-500">Understand your investments with personalized multi-agent AI intelligence.</p>
+        <h1 className="text-2xl font-extrabold text-primary font-display">Create Your ProsperHigh Account</h1>
+        <p className="text-xs text-secondary-muted">Understand your investments with personalized multi-agent AI intelligence.</p>
       </div>
 
-      <div className="prosper-card p-6 space-y-4">
+      <div className="prosper-card p-6 sm:p-7 space-y-4">
         {error && (
-          <div className="p-3 bg-red-50 text-negative border border-red-200 rounded-lg text-xs flex items-center space-x-2">
+          <div className="p-3 bg-negative/10 text-negative border border-negative/20 rounded-xl text-xs flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -101,57 +101,57 @@ export default function SignupPage() {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="text-xs font-bold text-slate-600 uppercase">Full Name</label>
+            <label className="text-[11px] font-bold text-secondary-muted uppercase tracking-wider">Full Name</label>
             <div className="relative mt-1">
-              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <User className="w-4 h-4 text-secondary-muted absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full bg-surface-elevated border border-border-subtle rounded-2xl pl-10 pr-4 py-3 text-xs text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-600 uppercase">Email Address</label>
+            <label className="text-[11px] font-bold text-secondary-muted uppercase tracking-wider">Email Address</label>
             <div className="relative mt-1">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Mail className="w-4 h-4 text-secondary-muted absolute left-3.5 top-3.5" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full bg-surface-elevated border border-border-subtle rounded-2xl pl-10 pr-4 py-3 text-xs text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-600 uppercase">Password</label>
+            <label className="text-[11px] font-bold text-secondary-muted uppercase tracking-wider">Password</label>
             <div className="relative mt-1">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-secondary-muted absolute left-3.5 top-3.5" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full bg-surface-elevated border border-border-subtle rounded-2xl pl-10 pr-4 py-3 text-xs text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-600 uppercase">Confirm Password</label>
+            <label className="text-[11px] font-bold text-secondary-muted uppercase tracking-wider">Confirm Password</label>
             <div className="relative mt-1">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-secondary-muted absolute left-3.5 top-3.5" />
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full bg-surface-elevated border border-border-subtle rounded-2xl pl-10 pr-4 py-3 text-xs text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>
@@ -159,24 +159,24 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-primary text-white font-extrabold text-xs rounded-xl hover:bg-primary-dark transition-all shadow-md flex items-center justify-center space-x-2"
+            className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-extrabold text-xs rounded-full transition-all shadow-md flex items-center justify-center space-x-2"
           >
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>CREATE ACCOUNT</span>}
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin text-black" /> : <span>CREATE ACCOUNT</span>}
             {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>
 
         <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-slate-200"></div>
-          <span className="flex-shrink mx-3 text-[11px] text-slate-400 font-bold uppercase">or continue with</span>
-          <div className="flex-grow border-t border-slate-200"></div>
+          <div className="flex-grow border-t border-border-subtle"></div>
+          <span className="flex-shrink mx-3 text-[11px] text-secondary-muted font-bold uppercase tracking-wider">or continue with</span>
+          <div className="flex-grow border-t border-border-subtle"></div>
         </div>
 
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-charcoal font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2"
+          className="w-full py-3 bg-surface border border-border-subtle hover:bg-surface-elevated text-primary font-bold text-xs rounded-full transition-all shadow-sm flex items-center justify-center space-x-2"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
@@ -199,9 +199,9 @@ export default function SignupPage() {
           <span>Sign Up with Google</span>
         </button>
 
-        <div className="pt-4 border-t border-slate-200 text-center text-xs text-slate-500">
+        <div className="pt-4 border-t border-border-subtle text-center text-xs text-secondary-muted">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary font-bold hover:underline">
+          <Link href="/login" className="text-accent font-bold hover:underline">
             Sign In Here
           </Link>
         </div>

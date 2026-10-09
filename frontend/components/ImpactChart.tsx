@@ -28,27 +28,34 @@ export const ImpactChart: React.FC<Props> = ({ agents, biggestFactorCallout }) =
   }).sort((a, b) => b.score - a.score);
 
   return (
-    <div className="prosper-card p-6">
+    <div className="prosper-card p-6 flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-bold text-charcoal font-manrope">Agent Impact Visual (Signed Score Weights)</h3>
-          <p className="text-xs text-slate-500">Positive weights push recommendation toward BUY; negative weights pull toward AVOID.</p>
+          <h3 className="text-base font-extrabold text-primary font-display">Agent Impact Weights</h3>
+          <p className="text-xs text-secondary-muted">Signed agent weight contributions driving synthesized recommendation</p>
         </div>
       </div>
 
+      {/* Fully rounded bars with clean theme styling (Ref D 'Income' style) */}
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart layout="vertical" data={chartData} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-            <XAxis type="number" domain={[-30, 30]} tickCount={7} stroke="#94A3B8" fontSize={11} />
-            <YAxis type="category" dataKey="name" stroke="#475569" fontSize={11} width={130} />
+          <BarChart layout="vertical" data={chartData} margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
+            <XAxis type="number" domain={[-30, 30]} tickCount={7} stroke="#8E8E93" fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis type="category" dataKey="name" stroke="#8E8E93" fontSize={11} width={130} tickLine={false} axisLine={false} />
             <Tooltip
-              formatter={(value: number) => [`${value > 0 ? "+" : ""}${value} points`, "Impact Score"]}
-              contentStyle={{ backgroundColor: "#FFFFFF", borderRadius: "8px", borderColor: "#CBD5E1", fontSize: "12px" }}
+              formatter={(value: number) => [`${value > 0 ? "+" : ""}${value} points`, "Impact Weight"]}
+              contentStyle={{
+                backgroundColor: "var(--bg-surface)",
+                borderRadius: "1rem",
+                borderColor: "var(--border-subtle)",
+                fontSize: "12px",
+                color: "var(--text-primary)"
+              }}
             />
-            <ReferenceLine x={0} stroke="#64748B" strokeDasharray="3 3" />
-            <Bar dataKey="score" radius={[4, 4, 4, 4]}>
+            <ReferenceLine x={0} stroke="var(--border-default)" strokeDasharray="3 3" />
+            <Bar dataKey="score" radius={[9999, 9999, 9999, 9999]}>
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.score >= 0 ? "#4F8A68" : "#B75D5D"} />
+                <Cell key={`cell-${index}`} fill={entry.score >= 0 ? "#22C55E" : "#F87171"} />
               ))}
             </Bar>
           </BarChart>
@@ -56,9 +63,9 @@ export const ImpactChart: React.FC<Props> = ({ agents, biggestFactorCallout }) =
       </div>
 
       {biggestFactorCallout && (
-        <div className="mt-4 bg-amber-50 p-3 rounded-lg border border-amber-200 flex items-start space-x-2 text-xs text-amber-900">
-          <span className="font-extrabold text-amber-700 uppercase tracking-wider whitespace-nowrap">Biggest Factor:</span>
-          <span>{biggestFactorCallout}</span>
+        <div className="mt-4 bg-accent-yellow/10 p-3 rounded-2xl border border-accent-yellow/20 flex items-start space-x-2 text-xs text-primary">
+          <span className="font-extrabold text-accent-yellow uppercase tracking-wider whitespace-nowrap">Dominant Factor:</span>
+          <span className="text-secondary">{biggestFactorCallout}</span>
         </div>
       )}
     </div>

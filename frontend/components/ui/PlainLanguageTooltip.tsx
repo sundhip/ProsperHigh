@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { HelpCircle, Info, Sparkles, BookOpen, AlertCircle } from "lucide-react";
+import { HelpCircle, Sparkles, AlertCircle } from "lucide-react";
 
 export interface TermDefinition {
   term: string;
@@ -103,7 +103,7 @@ export const PlainLanguageTooltip: React.FC<PlainLanguageTooltipProps> = ({
   limitations: customLim,
   example: customEx,
   children,
-  iconClassName = "w-3.5 h-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+  iconClassName = "w-3.5 h-3.5 text-secondary-muted hover:text-primary"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,7 +140,7 @@ export const PlainLanguageTooltip: React.FC<PlainLanguageTooltipProps> = ({
           setIsOpen(!isOpen);
         }}
         aria-label={`Plain language explanation for ${displayTerm}`}
-        className="ml-1 inline-flex items-center justify-center p-0.5 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-700/60 focus:outline-none focus:ring-1 focus:ring-sky-500 transition-colors"
+        className="ml-1 inline-flex items-center justify-center p-0.5 rounded-full hover:bg-surface-elevated focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
       >
         <HelpCircle className={iconClassName} />
       </button>
@@ -148,51 +148,51 @@ export const PlainLanguageTooltip: React.FC<PlainLanguageTooltipProps> = ({
       {isOpen && (
         <div
           role="tooltip"
-          className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 sm:w-80 p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl text-left animate-in fade-in zoom-in-95 duration-150"
+          className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 sm:w-80 p-4 bg-surface border border-border-subtle rounded-2xl shadow-2xl text-left animate-in fade-in zoom-in-95 duration-150"
         >
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 mb-2.5">
+          <div className="flex items-center justify-between border-b border-border-subtle pb-2.5 mb-2.5">
             <div className="flex items-center space-x-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#C9A96E]" />
-              <span className="font-bold text-xs text-slate-900 dark:text-white">
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
+              <span className="font-bold text-xs text-primary font-display">
                 {displayTerm}
               </span>
             </div>
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-elevated text-secondary">
               Plain English
             </span>
           </div>
 
-          <div className="space-y-2 text-[11px] leading-relaxed">
+          <div className="space-y-2.5 text-[11px] leading-relaxed">
             <div>
-              <span className="font-bold text-slate-800 dark:text-slate-200 block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="font-bold text-secondary-muted block text-[10px] uppercase tracking-wider">
                 What it means
               </span>
-              <p className="text-slate-600 dark:text-slate-300 mt-0.5">
+              <p className="text-secondary mt-0.5">
                 {displaySimple}
               </p>
             </div>
 
             <div>
-              <span className="font-bold text-slate-800 dark:text-slate-200 block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="font-bold text-secondary-muted block text-[10px] uppercase tracking-wider">
                 Why it matters to you
               </span>
-              <p className="text-slate-600 dark:text-slate-300 mt-0.5">
+              <p className="text-secondary mt-0.5">
                 {displayWhy}
               </p>
             </div>
 
-            <div className="bg-amber-50/70 dark:bg-amber-950/30 p-2 rounded-lg border border-amber-200/50 dark:border-amber-800/40">
-              <span className="font-bold text-amber-800 dark:text-amber-300 block text-[10px] uppercase tracking-wider flex items-center space-x-1">
-                <AlertCircle className="w-3 h-3 inline mr-1 text-amber-600" />
+            <div className="bg-accent-yellow/10 p-2.5 rounded-xl border border-accent-yellow/20">
+              <span className="font-bold text-accent-yellow block text-[10px] uppercase tracking-wider flex items-center space-x-1">
+                <AlertCircle className="w-3 h-3 inline mr-1 text-accent-yellow" />
                 Limitations
               </span>
-              <p className="text-amber-700 dark:text-amber-300/90 text-[10.5px] mt-0.5">
+              <p className="text-secondary text-[10.5px] mt-0.5">
                 {displayLim}
               </p>
             </div>
 
             {displayEx && (
-              <div className="pt-1 text-[10px] text-slate-500 dark:text-slate-400 italic">
+              <div className="pt-1 text-[10px] text-secondary-muted italic">
                 <strong>Example:</strong> {displayEx}
               </div>
             )}

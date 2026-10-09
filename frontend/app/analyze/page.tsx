@@ -19,7 +19,7 @@ import { AnalysisComparisonModal } from "@/components/AnalysisComparisonModal";
 import { getAnalysisHistory } from "@/lib/api";
 import { useExperience } from "@/components/ExperienceProvider";
 import { PlainLanguageTooltip } from "@/components/ui/PlainLanguageTooltip";
-import { Search, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, GitCompare, Info } from "lucide-react";
+import { Search, Sparkles, CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, GitCompare } from "lucide-react";
 
 function AnalyzeContentV3() {
   const searchParams = useSearchParams();
@@ -108,8 +108,8 @@ function AnalyzeContentV3() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Dynamic Stock Search Box for ANY company */}
-      <form onSubmit={handleSearchSubmit} className="prosper-card p-6 bg-slate-900 text-white space-y-3 border border-slate-800 relative z-20">
+      {/* 1. Dynamic Stock Search Box for ANY company (Bento Card Ref B & D) */}
+      <form onSubmit={handleSearchSubmit} className="prosper-card p-6 bg-surface text-primary space-y-3 relative z-20">
         <div className="flex items-center space-x-2 text-accent text-xs font-bold uppercase tracking-wider">
           <Sparkles className="w-4 h-4" />
           <span>Dynamic Stock Analysis Engine — Search Any Company</span>
@@ -118,29 +118,29 @@ function AnalyzeContentV3() {
         <div className="relative">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+              <Search className="w-4 h-4 text-secondary-muted absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search any stock or company (e.g., Tata Motors, Reliance, Infosys, Apple)..."
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full bg-surface-elevated border border-border-subtle rounded-2xl pl-10 pr-4 py-3 text-xs text-primary placeholder-secondary-muted focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-accent hover:bg-accent-light text-charcoal font-extrabold text-xs rounded-xl shadow-md transition-all whitespace-nowrap flex items-center justify-center space-x-1.5"
+              className="px-7 py-3 bg-accent hover:bg-accent-hover text-black font-extrabold text-xs rounded-full shadow-md transition-all whitespace-nowrap flex items-center justify-center space-x-2"
             >
-              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Analyze Company →</span>}
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin text-black" /> : <span>Analyze Company →</span>}
             </button>
 
             {historyRuns.length > 1 && (
               <button
                 type="button"
                 onClick={() => setShowCompareModal(true)}
-                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 shadow-md transition-all whitespace-nowrap flex items-center justify-center space-x-1.5"
+                className="px-5 py-3 bg-surface-elevated hover:bg-surface text-primary font-bold text-xs rounded-full border border-border-subtle shadow-sm transition-all whitespace-nowrap flex items-center justify-center space-x-2"
               >
                 <GitCompare className="w-4 h-4 text-accent" />
                 <span>Compare Prior Run</span>
@@ -150,18 +150,18 @@ function AnalyzeContentV3() {
 
           {/* Real-time Search Dropdown */}
           {showDropdown && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-12 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-30 max-h-60 overflow-y-auto divide-y divide-slate-700/60">
+            <div className="absolute left-0 right-0 top-14 bg-surface border border-border-subtle rounded-2xl shadow-2xl overflow-hidden z-30 max-h-60 overflow-y-auto divide-y divide-border-subtle">
               {suggestions.map((st) => (
                 <div
                   key={st.symbol}
                   onClick={() => selectStock(st.symbol)}
-                  className="p-3 hover:bg-slate-700/80 cursor-pointer flex items-center justify-between text-xs transition-all"
+                  className="p-3.5 hover:bg-surface-elevated cursor-pointer flex items-center justify-between text-xs transition-all"
                 >
                   <div>
-                    <span className="font-bold text-white mr-2">{st.symbol}</span>
-                    <span className="text-slate-300">{st.name}</span>
+                    <span className="font-bold text-primary mr-2">{st.symbol}</span>
+                    <span className="text-secondary">{st.name}</span>
                   </div>
-                  <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-slate-400 font-mono">{st.sector}</span>
+                  <span className="text-[10px] bg-surface-elevated px-2 py-0.5 rounded-full text-secondary-muted font-mono">{st.sector}</span>
                 </div>
               ))}
             </div>
@@ -173,49 +173,43 @@ function AnalyzeContentV3() {
       {loading ? (
         <div className="prosper-card p-10 space-y-6">
           <div className="text-center space-y-2">
-            <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
-            <h2 className="text-lg font-extrabold text-charcoal font-manrope">
+            <RefreshCw className="w-8 h-8 text-accent animate-spin mx-auto" />
+            <h2 className="text-lg font-extrabold text-primary font-display">
               Synthesizing Multi-Agent Intelligence for {symbol}...
             </h2>
           </div>
 
-          <div className="max-w-md mx-auto space-y-2.5 text-xs font-semibold">
-            <div className={`flex items-center space-x-2.5 ${loadingStep >= 1 ? "text-positive" : "text-slate-400"}`}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>1. Symbol & Market Provider Resolved ({symbol})</span>
-            </div>
-            <div className={`flex items-center space-x-2.5 ${loadingStep >= 2 ? "text-positive" : "text-slate-400"}`}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>2. Technical Indicators (SMA, RSI, MACD) Calculated</span>
-            </div>
-            <div className={`flex items-center space-x-2.5 ${loadingStep >= 3 ? "text-positive" : "text-slate-400"}`}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>3. Fundamental Trajectory & Cash Flows Analyzed</span>
-            </div>
-            <div className={`flex items-center space-x-2.5 ${loadingStep >= 4 ? "text-positive" : "text-slate-400"}`}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>4. FinBERT Sentiment & Regulatory Filings Scanned</span>
-            </div>
-            <div className={`flex items-center space-x-2.5 ${loadingStep >= 5 ? "text-positive" : "text-slate-400"}`}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>5. Personalized Portfolio Risk & Concentration Evaluated</span>
-            </div>
-            <div className={`flex items-center space-x-2.5 ${loadingStep >= 6 ? "text-positive" : "text-slate-400"}`}>
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>6. Final Weighted Suitability Decision Synthesized</span>
-            </div>
+          <div className="max-w-md mx-auto space-y-3 text-xs font-semibold">
+            {[
+              { step: 1, text: `1. Symbol & Market Provider Resolved (${symbol})` },
+              { step: 2, text: "2. Technical Indicators (SMA, RSI, MACD) Calculated" },
+              { step: 3, text: "3. Fundamental Trajectory & Cash Flows Analyzed" },
+              { step: 4, text: "4. FinBERT Sentiment & Regulatory Filings Scanned" },
+              { step: 5, text: "5. Personalized Portfolio Risk & Concentration Evaluated" },
+              { step: 6, text: "6. Final Weighted Suitability Decision Synthesized" },
+            ].map((s) => (
+              <div
+                key={s.step}
+                className={`flex items-center space-x-2.5 ${
+                  loadingStep >= s.step ? "text-accent" : "text-secondary-muted"
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{s.text}</span>
+              </div>
+            ))}
           </div>
         </div>
       ) : error ? (
-        <div className="prosper-card p-8 bg-red-50/80 border border-red-200 text-red-900 rounded-2xl space-y-3">
+        <div className="prosper-card p-8 bg-negative/10 border border-negative/20 text-negative rounded-3xl space-y-3">
           <div className="flex items-center space-x-2.5 font-bold text-base">
-            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-negative shrink-0" />
             <span>Analysis Execution Halted</span>
           </div>
-          <p className="text-xs text-red-700 leading-relaxed font-medium">{error}</p>
+          <p className="text-xs text-secondary leading-relaxed font-medium">{error}</p>
           <button
             onClick={() => fetchAnalysisData(symbol)}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all"
+            className="px-5 py-2.5 bg-negative text-white text-xs font-bold rounded-full transition-all"
           >
             Retry Analysis
           </button>
@@ -242,19 +236,19 @@ function AnalyzeContentV3() {
 
           {/* Warnings & Uncertainty Callout */}
           {((analysis.warnings && analysis.warnings.length > 0) || analysis.uncertainty) && (
-            <div className="p-4 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/50 rounded-xl space-y-1.5 text-xs text-amber-900 dark:text-amber-300">
-              <div className="flex items-center space-x-2 font-bold text-amber-800 dark:text-amber-400">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div className="p-4 bg-accent-yellow/10 border border-accent-yellow/20 rounded-2xl space-y-1.5 text-xs text-primary">
+              <div className="flex items-center space-x-2 font-bold text-accent-yellow">
+                <AlertTriangle className="w-4 h-4 text-accent-yellow shrink-0" />
                 <span>Synthesis Warnings & Model Uncertainty</span>
                 <PlainLanguageTooltip termKey="uncertainty_profile" />
               </div>
               {analysis.uncertainty && (
-                <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                <p className="text-[11px] text-secondary font-medium">
                   <strong>Uncertainty Profile:</strong> {analysis.uncertainty}
                 </p>
               )}
               {analysis.warnings?.map((w: string, idx: number) => (
-                <div key={idx} className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center space-x-1">
+                <div key={idx} className="text-[11px] text-secondary flex items-center space-x-1">
                   <span>•</span>
                   <span>{w}</span>
                 </div>
@@ -262,30 +256,30 @@ function AnalyzeContentV3() {
             </div>
           )}
 
-          {/* 5. Positive vs Negative Factors */}
+          {/* 5. Positive vs Negative Factors (Ref A Bento Cards) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="prosper-card p-5 border-t-4 border-t-positive">
-              <h3 className="text-xs font-bold text-positive uppercase tracking-wider mb-3 flex items-center space-x-1.5">
+            <div className="prosper-card p-6">
+              <h3 className="text-xs font-bold text-accent uppercase tracking-wider mb-3 flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Positive Drivers (+ Score)</span>
               </h3>
               <ul className="space-y-2">
                 {analysis.positive_factors?.map((fact: string, idx: number) => (
-                  <li key={idx} className="text-xs text-slate-800 dark:text-slate-200 bg-emerald-50/50 dark:bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 font-medium">
+                  <li key={idx} className="text-xs text-primary bg-accent/5 p-3 rounded-xl border border-accent/20 font-medium">
                     ✓ {fact}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="prosper-card p-5 border-t-4 border-t-negative">
-              <h3 className="text-xs font-bold text-negative uppercase tracking-wider mb-3 flex items-center space-x-1.5">
+            <div className="prosper-card p-6">
+              <h3 className="text-xs font-bold text-negative uppercase tracking-wider mb-3 flex items-center space-x-2">
                 <XCircle className="w-4 h-4" />
                 <span>Risk & Concentration Concerns (- Score)</span>
               </h3>
               <ul className="space-y-2">
                 {analysis.negative_factors?.map((fact: string, idx: number) => (
-                  <li key={idx} className="text-xs text-slate-800 dark:text-slate-200 bg-red-50/50 dark:bg-red-950/20 p-2.5 rounded-lg border border-red-200/60 dark:border-red-800/40 font-medium">
+                  <li key={idx} className="text-xs text-primary bg-negative/5 p-3 rounded-xl border border-negative/20 font-medium">
                     ✕ {fact}
                   </li>
                 ))}
@@ -297,7 +291,7 @@ function AnalyzeContentV3() {
           <div className="text-center pt-2">
             <button
               onClick={() => setShowMultiAgentDetails(!showMultiAgentDetails)}
-              className="inline-flex items-center space-x-2 px-6 py-2.5 bg-slate-900 dark:bg-sky-600 text-white rounded-xl text-xs font-extrabold shadow-md hover:bg-slate-800 dark:hover:bg-sky-500 transition-all"
+              className="inline-flex items-center space-x-2 px-7 py-3 bg-surface hover:bg-surface-elevated text-primary border border-border-subtle rounded-full text-xs font-extrabold shadow transition-all"
             >
               <span>
                 {showMultiAgentDetails
@@ -306,10 +300,10 @@ function AnalyzeContentV3() {
                   ? "Show Detailed Multi-Agent Breakdown (6 Specialized Agents)"
                   : "How ProsperHigh Reached This Decision (6 Agents)"}
               </span>
-              {showMultiAgentDetails ? <ChevronUp className="w-4 h-4 text-[#C9A96E]" /> : <ChevronDown className="w-4 h-4 text-[#C9A96E]" />}
+              {showMultiAgentDetails ? <ChevronUp className="w-4 h-4 text-accent" /> : <ChevronDown className="w-4 h-4 text-accent" />}
             </button>
             {isBeginner && !showMultiAgentDetails && (
-              <p className="text-[11px] text-slate-400 mt-1.5">
+              <p className="text-[11px] text-secondary-muted mt-2">
                 Essential summary shown above. Expand to inspect debate arguments, quantitative agent weights, and decision traces.
               </p>
             )}
@@ -362,7 +356,7 @@ function AnalyzeContentV3() {
 
 export default function AnalyzePageV3() {
   return (
-    <Suspense fallback={<div className="prosper-card p-12 text-center text-slate-500">Loading Analysis Terminal...</div>}>
+    <Suspense fallback={<div className="prosper-card p-12 text-center text-secondary-muted">Loading Analysis Terminal...</div>}>
       <AnalyzeContentV3 />
     </Suspense>
   );

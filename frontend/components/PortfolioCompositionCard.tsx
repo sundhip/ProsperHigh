@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { PieChart, ShieldAlert, CheckCircle2, TrendingUp, Info } from "lucide-react";
+import { TrendingUp, Info } from "lucide-react";
 import { getPortfolioComposition } from "@/lib/api";
 import { PlainLanguageTooltip } from "@/components/ui/PlainLanguageTooltip";
 
@@ -29,7 +29,7 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
 
   if (loading) {
     return (
-      <div className="prosper-card p-6 text-center text-xs text-slate-400 font-bold">
+      <div className="prosper-card p-6 text-center text-xs text-secondary-muted font-bold">
         Analyzing portfolio concentration and HHI index...
       </div>
     );
@@ -47,24 +47,24 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
   const targetConfigured = data.target_allocations_configured ?? false;
 
   return (
-    <div className="prosper-card p-6 border-l-4 border-l-primary space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+    <div className="prosper-card p-6 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-subtle pb-3">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-            Phase 4 Portfolio Intelligence
+          <span className="text-[10px] font-bold uppercase tracking-wider text-secondary-muted">
+            Portfolio Concentration
           </span>
-          <h3 className="text-base font-extrabold text-charcoal font-manrope">
-            Concentration Analytics & Herfindahl-Hirschman Index (HHI)
+          <h3 className="text-base font-extrabold text-primary font-display">
+            Concentration Analytics & Herfindahl Index (HHI)
           </h3>
         </div>
 
         <span
-          className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${
+          className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
             rating === "DIVERSIFIED" || rating === "LOW"
-              ? "bg-emerald-100 text-emerald-800"
+              ? "bg-accent/10 text-accent border border-accent/20"
               : rating === "HIGHLY_CONCENTRATED" || rating === "HIGH"
-              ? "bg-rose-100 text-rose-800"
-              : "bg-amber-100 text-amber-800"
+              ? "bg-negative/10 text-negative border border-negative/20"
+              : "bg-accent-yellow/15 text-accent-yellow border border-accent-yellow/25"
           }`}
         >
           {rating.replace("_", " ")}
@@ -73,13 +73,13 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* HHI Score */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+        <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle">
+          <div className="flex items-center text-[10px] uppercase font-bold text-secondary-muted">
             <span>HHI Score (0 - 10,000)</span>
             <PlainLanguageTooltip termKey="hhi" />
           </div>
-          <div className="text-2xl font-black text-charcoal dark:text-white mt-0.5">{Math.round(hhi)}</div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="text-2xl font-black text-primary mt-0.5">{Math.round(hhi)}</div>
+          <div className="text-[11px] text-secondary mt-1">
             {hhi < 1500
               ? "Healthy (< 1,500 = Diversified)"
               : hhi < 2500
@@ -89,19 +89,19 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
         </div>
 
         {/* Top 3 Concentration */}
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="text-[10px] uppercase font-bold text-slate-500">Top 3 Positions Weight</div>
+        <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle">
+          <div className="text-[10px] uppercase font-bold text-secondary-muted">Top 3 Positions Weight</div>
           <div className="text-2xl font-black text-primary mt-0.5">{top3}%</div>
-          <div className="text-[11px] text-slate-500 mt-1">
+          <div className="text-[11px] text-secondary mt-1">
             {top3 > 50 ? "⚠ Top 3 exceed 50% of portfolio" : "✓ Balanced across top names"}
           </div>
         </div>
 
         {/* Top 5 Concentration */}
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="text-[10px] uppercase font-bold text-slate-500">Top 5 Positions Weight</div>
+        <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle">
+          <div className="text-[10px] uppercase font-bold text-secondary-muted">Top 5 Positions Weight</div>
           <div className="text-2xl font-black text-accent mt-0.5">{top5}%</div>
-          <div className="text-[11px] text-slate-500 mt-1">
+          <div className="text-[11px] text-secondary mt-1">
             {top5 > 75 ? "⚠ Top 5 dominate returns" : "✓ Multi-holding distribution"}
           </div>
         </div>
@@ -109,14 +109,14 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
 
       {/* Target Allocation Drift Section */}
       <div className="pt-2">
-        <h4 className="text-xs font-bold text-charcoal uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-          <TrendingUp className="w-4 h-4 text-primary" />
+        <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center space-x-1.5">
+          <TrendingUp className="w-4 h-4 text-accent" />
           <span>Target Allocation Drift</span>
         </h4>
 
         {!targetConfigured ? (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center space-x-2">
-            <Info className="w-4 h-4 text-slate-400 shrink-0" />
+          <div className="p-3 bg-surface-elevated rounded-2xl border border-border-subtle text-xs text-secondary flex items-center space-x-2">
+            <Info className="w-4 h-4 text-secondary-muted shrink-0" />
             <span>
               Target asset allocations not configured. Set explicit target weights in your Profile to track allocation drift.
             </span>
@@ -124,16 +124,16 @@ export const PortfolioCompositionCard: React.FC<Props> = ({ portfolioId, refresh
         ) : (
           <div className="space-y-2">
             {drift.map((d: any, idx: number) => (
-              <div key={idx} className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+              <div key={idx} className="p-3 bg-surface rounded-2xl border border-border-subtle flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-bold text-charcoal">{d.asset_class || d.sector}</span>
-                  <div className="text-[11px] text-slate-500">
+                  <span className="font-bold text-primary">{d.asset_class || d.sector}</span>
+                  <div className="text-[11px] text-secondary-muted">
                     Target: {d.target_pct}% | Current: {d.current_pct}%
                   </div>
                 </div>
                 <div
                   className={`font-black text-sm ${
-                    Math.abs(d.drift_pct) > 5 ? "text-amber-600" : "text-emerald-600"
+                    Math.abs(d.drift_pct) > 5 ? "text-accent-yellow" : "text-accent"
                   }`}
                 >
                   {d.drift_pct > 0 ? `+${d.drift_pct}%` : `${d.drift_pct}%`} drift

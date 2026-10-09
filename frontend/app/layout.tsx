@@ -31,30 +31,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="bg-background text-charcoal flex min-h-screen antialiased selection:bg-slate-900 selection:text-white dark:selection:bg-sky-500 dark:selection:text-slate-900">
+      <body className="bg-background text-primary antialiased selection:bg-accent selection:text-black min-h-screen">
         <ThemeProvider>
           <ExperienceProvider>
-            {/* Main App Container */}
-            <div className="flex w-full min-h-screen">
-              {/* Left Sidebar Shell */}
-              <Sidebar onStartTour={() => setIsTourOpen(true)} />
+            {/* Desktop App Container: Rounded bento shell with outer margin (Ref B, C, D) */}
+            <div className="min-h-screen p-0 md:p-3 lg:p-4 flex flex-col justify-between">
+              <div className="flex-1 flex w-full max-w-[1600px] mx-auto gap-3 lg:gap-4 relative">
+                {/* Dark Rounded Sidebar Panel */}
+                <Sidebar onStartTour={() => setIsTourOpen(true)} />
 
-              {/* Main Content Area */}
-              <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-                <TopHeader />
+                {/* Main Content Area in rounded bento surface */}
+                <div className="flex-1 flex flex-col min-w-0 min-h-full">
+                  <TopHeader />
 
-                <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto">
-                  {children}
-                </main>
+                  <main className="flex-1 p-4 sm:p-6 lg:p-7 w-full">
+                    {children}
+                  </main>
 
-                <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                  <p className="font-bold text-slate-900 dark:text-white">
-                    PROSPER<span className="text-[#C9A96E]">HIGH</span> — Decision Intelligence Platform v3.2
-                  </p>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    Understand your investments. Understand why. Model-Agnostic Multi-Agent Architecture.
-                  </p>
-                </footer>
+                  <footer className="mt-8 border-t border-border-subtle py-5 px-6 text-center text-xs text-secondary-muted flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <p className="font-bold text-primary font-display">
+                      PROSPER<span className="text-accent">HIGH</span> <span className="font-normal text-secondary-muted">• Financial Decision Intelligence</span>
+                    </p>
+                    <p className="text-[11px] text-secondary-muted">
+                      Understand your investments. Understand why.
+                    </p>
+                  </footer>
+                </div>
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquare, ArrowUpRight, ArrowDownRight, HelpCircle, ChevronDown, ChevronUp, Scale } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, HelpCircle, ChevronDown, ChevronUp, Scale } from "lucide-react";
 
 interface DebatePoint {
   topic?: string;
@@ -33,28 +33,30 @@ export const AIDebateCard: React.FC<Props> = ({ aiDebate }) => {
   const points = aiDebate.debate_points || [];
 
   return (
-    <div className="prosper-card p-6 border-l-4 border-l-accent space-y-4">
+    <div className="prosper-card p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Scale className="w-5 h-5 text-accent" />
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-xl bg-surface-elevated text-accent flex items-center justify-center shrink-0">
+            <Scale className="w-4 h-4" />
+          </div>
           <div>
-            <h3 className="text-base font-extrabold text-charcoal font-manrope">
-              Multi-Agent Specialist Debate
+            <h3 className="text-base font-extrabold text-primary font-display">
+              Autonomous Agent Debate
             </h3>
-            <p className="text-xs text-slate-500">
-              Autonomous clash between valuation, momentum, risk, and regulatory agents
+            <p className="text-xs text-secondary-muted">
+              Valuation, momentum, risk, and regulatory agent dialectic
             </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
           <span
-            className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${
+            className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
               consensus === "CONSENSUS"
-                ? "bg-emerald-100 text-emerald-800"
+                ? "bg-accent/15 text-accent border border-accent/25"
                 : consensus === "SPLIT_OPINION"
-                ? "bg-rose-100 text-rose-800"
-                : "bg-amber-100 text-amber-800"
+                ? "bg-negative/15 text-negative border border-negative/25"
+                : "bg-accent-yellow/15 text-accent-yellow border border-accent-yellow/25"
             }`}
           >
             {consensus.replace("_", " ")}
@@ -62,7 +64,7 @@ export const AIDebateCard: React.FC<Props> = ({ aiDebate }) => {
 
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-slate-400 hover:text-charcoal p-1"
+            className="text-secondary-muted hover:text-primary p-1"
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -73,13 +75,13 @@ export const AIDebateCard: React.FC<Props> = ({ aiDebate }) => {
         <div className="space-y-4 pt-2">
           {/* Key Unresolved Question Callout */}
           {aiDebate.key_unresolved_question && (
-            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex items-start space-x-2.5">
-              <HelpCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="p-3.5 bg-accent-yellow/10 border border-accent-yellow/20 rounded-2xl flex items-start space-x-2.5">
+              <HelpCircle className="w-4 h-4 text-accent-yellow shrink-0 mt-0.5" />
               <div className="text-xs">
-                <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider block">
+                <span className="font-bold text-accent-yellow uppercase text-[10px] tracking-wider block">
                   Core Contested Question
                 </span>
-                <p className="text-amber-800 font-medium mt-0.5">
+                <p className="text-secondary font-medium mt-0.5">
                   {aiDebate.key_unresolved_question}
                 </p>
               </div>
@@ -89,13 +91,13 @@ export const AIDebateCard: React.FC<Props> = ({ aiDebate }) => {
           {/* Specialist Debate Grid */}
           <div className="space-y-3">
             {points.map((pt, idx) => (
-              <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                  <span className="text-xs font-black text-slate-700 uppercase">
+              <div key={idx} className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle space-y-3">
+                <div className="flex items-center justify-between border-b border-border-subtle pb-2">
+                  <span className="text-xs font-bold text-primary uppercase tracking-wider">
                     Debate #{idx + 1}: {pt.topic || "Core Thesis Tension"}
                   </span>
                   {pt.contested_metric && (
-                    <span className="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded font-mono text-slate-600">
+                    <span className="text-[10px] bg-surface border border-border-subtle px-2.5 py-0.5 rounded-full font-mono text-secondary">
                       Metric: {pt.contested_metric}
                     </span>
                   )}
@@ -103,30 +105,30 @@ export const AIDebateCard: React.FC<Props> = ({ aiDebate }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                   {/* Bull Case */}
-                  <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-200/60 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-emerald-800 text-xs font-bold">
-                      <ArrowUpRight className="w-4 h-4 text-emerald-600" />
+                  <div className="bg-accent/5 p-3.5 rounded-xl border border-accent/20 space-y-1">
+                    <div className="flex items-center space-x-1.5 text-accent text-xs font-bold">
+                      <ArrowUpRight className="w-4 h-4" />
                       <span>{pt.bull_agent || "Bull Specialist"}</span>
                     </div>
-                    <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                    <p className="text-xs text-secondary leading-relaxed font-medium">
                       {pt.bull_argument}
                     </p>
                   </div>
 
                   {/* Bear Case */}
-                  <div className="bg-rose-50/50 p-3 rounded-lg border border-rose-200/60 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-rose-800 text-xs font-bold">
-                      <ArrowDownRight className="w-4 h-4 text-rose-600" />
+                  <div className="bg-negative/5 p-3.5 rounded-xl border border-negative/20 space-y-1">
+                    <div className="flex items-center space-x-1.5 text-negative text-xs font-bold">
+                      <ArrowDownRight className="w-4 h-4" />
                       <span>{pt.bear_agent || "Bear Specialist"}</span>
                     </div>
-                    <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                    <p className="text-xs text-secondary leading-relaxed font-medium">
                       {pt.bear_argument}
                     </p>
                   </div>
                 </div>
 
                 {pt.resolution && (
-                  <div className="text-[11px] text-slate-600 bg-white p-2 rounded border border-slate-200 flex items-center space-x-1.5">
+                  <div className="text-[11px] text-secondary bg-surface p-2.5 rounded-xl border border-border-subtle flex items-center space-x-2">
                     <span className="font-bold text-primary">Synthesis Resolution:</span>
                     <span>{pt.resolution}</span>
                   </div>

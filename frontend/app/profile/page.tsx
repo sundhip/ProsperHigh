@@ -94,27 +94,27 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div>
-        <div className="flex items-center space-x-2">
-          <UserIcon className="w-5 h-5 text-[#C9A96E]" />
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-display">
-            Investor Profile & Suitability
-          </h1>
+        <div>
+          <div className="flex items-center space-x-2">
+            <UserIcon className="w-5 h-5 text-accent" />
+            <h1 className="text-xl sm:text-2xl font-extrabold text-primary font-display">
+              Investor Profile & Suitability
+            </h1>
+          </div>
+          <p className="text-xs text-secondary-muted mt-0.5">
+            These parameters inform the Phase 4 Suitability Engine when evaluating if an investment matches your risk tolerance.
+          </p>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          These parameters inform the Phase 4 Suitability Engine when evaluating if an investment matches your risk tolerance.
-        </p>
-      </div>
 
       {successMsg && (
-        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs flex items-center space-x-2">
+        <div className="p-3 bg-accent/10 border border-accent/20 text-accent rounded-xl text-xs flex items-center space-x-2 font-medium">
           <CheckCircle className="w-4 h-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 rounded-xl text-xs">
+        <div className="p-3 bg-negative/10 border border-negative/20 text-negative rounded-xl text-xs font-medium">
           {errorMsg}
         </div>
       )}
@@ -147,20 +147,20 @@ export default function ProfilePage() {
 
           {/* Profile Configuration Form */}
           <div className="prosper-card p-6">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display mb-4">
+            <h3 className="text-sm font-bold text-primary font-display mb-4">
               Calibrate Suitability Profile
             </h3>
 
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-secondary mb-1">
                     Risk Category
                   </label>
                   <select
                     value={riskCategory}
                     onChange={(e) => setRiskCategory(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary focus:ring-2 focus:ring-accent outline-none"
                   >
                     <option value="Conservative">Conservative</option>
                     <option value="Moderate">Moderate</option>
@@ -170,13 +170,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-secondary mb-1">
                     Experience Level
                   </label>
                   <select
                     value={experienceLevel}
                     onChange={(e) => setExperienceLevel(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary focus:ring-2 focus:ring-accent outline-none"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Learning Investor">Learning Investor</option>
@@ -186,13 +186,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-secondary mb-1">
                     Investment Horizon
                   </label>
                   <select
                     value={investmentHorizon}
                     onChange={(e) => setInvestmentHorizon(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary focus:ring-2 focus:ring-accent outline-none"
                   >
                     <option value="Under 1 Year">Under 1 Year (&lt;12m)</option>
                     <option value="1–3 Years">1–3 Years</option>
@@ -202,13 +202,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-secondary mb-1">
                     Primary Financial Objective
                   </label>
                   <select
                     value={primaryGoal}
                     onChange={(e) => setPrimaryGoal(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary focus:ring-2 focus:ring-accent outline-none"
                   >
                     <option value="Capital Preservation">Capital Preservation</option>
                     <option value="Wealth Growth">Wealth Growth</option>
@@ -218,13 +218,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-secondary mb-1">
                     Reaction to Market Drawdowns
                   </label>
                   <select
                     value={lossReaction}
                     onChange={(e) => setLossReaction(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary focus:ring-2 focus:ring-accent outline-none"
                   >
                     <option value="Sell immediately to cut loss">Sell immediately to cut loss</option>
                     <option value="Wait and monitor">Wait and monitor</option>
@@ -233,7 +233,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-secondary mb-1">
                     Maximum Single Stock Weight (%)
                   </label>
                   <input
@@ -242,7 +242,7 @@ export default function ProfilePage() {
                     max="50"
                     value={maxStockExposurePct}
                     onChange={(e) => setMaxStockExposurePct(Number(e.target.value))}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                    className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary focus:ring-2 focus:ring-accent outline-none"
                   />
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-slate-900 dark:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md hover:opacity-90 transition-opacity flex items-center space-x-1.5"
+                  className="px-6 py-2.5 bg-accent text-accent-foreground rounded-full text-xs font-bold shadow-md hover:opacity-90 transition-opacity flex items-center space-x-1.5"
                 >
                   <Save className="w-4 h-4" />
                   <span>{saving ? "Saving..." : "Save Preferences"}</span>

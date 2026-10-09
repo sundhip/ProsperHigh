@@ -79,12 +79,12 @@ export default function DecisionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
-            <History className="w-5 h-5 text-[#C9A96E]" />
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-display">
+            <History className="w-5 h-5 text-accent" />
+            <h1 className="text-xl sm:text-2xl font-extrabold text-primary font-display">
               Decisions & Audit Log
             </h1>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-secondary-muted mt-0.5">
             Historical record of multi-agent investment assessments, thesis iterations, and suitability evaluations.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function DecisionsPage() {
           <button
             onClick={handleRunComparison}
             disabled={isComparing}
-            className="px-4 py-2 bg-slate-900 dark:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-md hover:opacity-90 transition-opacity flex items-center space-x-1.5"
+            className="px-4 py-2 bg-accent text-accent-foreground rounded-full text-xs font-bold shadow-md hover:opacity-90 transition-opacity flex items-center space-x-1.5"
           >
             <Scale className="w-4 h-4" />
             <span>{isComparing ? "Comparing..." : "Compare 2 Selected Runs"}</span>
@@ -103,32 +103,32 @@ export default function DecisionsPage() {
 
       {/* Comparison Modal / Panel */}
       {comparisonResult && (
-        <div className="prosper-card p-6 border-sky-300 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/20 relative">
+        <div className="prosper-card p-6 border-accent/40 bg-accent/5 relative">
           <button
             onClick={() => setComparisonResult(null)}
-            className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="absolute top-4 right-4 p-1.5 text-secondary-muted hover:text-primary rounded-full hover:bg-surface-elevated"
           >
             <X className="w-4 h-4" />
           </button>
           <div className="flex items-center space-x-2 mb-3">
-            <Scale className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+            <Scale className="w-5 h-5 text-accent" />
+            <h3 className="text-sm font-bold text-primary font-display">
               Decision Evolution: {comparisonResult.symbol}
             </h3>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-300 mb-4">
+          <p className="text-xs text-secondary mb-4">
             {comparisonResult.evolution_summary || comparisonResult.summary || "Evolution analysis between recorded runs."}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Run A Decision</span>
-              <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+            <div className="p-3 bg-surface rounded-xl border border-subtle">
+              <span className="text-[10px] uppercase font-bold text-secondary-muted">Run A Decision</span>
+              <div className="text-sm font-bold text-primary mt-1">
                 {comparisonResult.run_a?.decision || "—"} ({comparisonResult.run_a?.net_score ?? 0} pts)
               </div>
             </div>
-            <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Run B Decision</span>
-              <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+            <div className="p-3 bg-surface rounded-xl border border-subtle">
+              <span className="text-[10px] uppercase font-bold text-secondary-muted">Run B Decision</span>
+              <div className="text-sm font-bold text-primary mt-1">
                 {comparisonResult.run_b?.decision || "—"} ({comparisonResult.run_b?.net_score ?? 0} pts)
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function DecisionsPage() {
         <TableSkeleton rows={5} />
       ) : !user ? (
         <EmptyState
-          icon={<History className="w-8 h-8 text-slate-400" />}
+          icon={<History className="w-8 h-8 text-secondary-muted" />}
           title="Sign In to View Decision History"
           description="Your decision audit trail is securely isolated to your account. Sign in to review past AI engine assessments."
           actionLabel="Sign In"
@@ -149,7 +149,7 @@ export default function DecisionsPage() {
         />
       ) : history.length === 0 ? (
         <EmptyState
-          icon={<History className="w-8 h-8 text-[#C9A96E]" />}
+          icon={<History className="w-8 h-8 text-accent" />}
           title="No Decision Records Found"
           description="You haven't run any multi-agent investigations yet. Select a stock to generate an explainable assessment."
           actionLabel="Analyze First Stock"
@@ -160,7 +160,7 @@ export default function DecisionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 uppercase text-[10px] tracking-wider font-semibold">
+                <tr className="border-b border-subtle bg-surface-elevated/40 text-secondary-muted uppercase text-[10px] tracking-wider font-semibold">
                   <th className="py-3 px-4 w-10">Select</th>
                   <th className="py-3 px-4">Instrument</th>
                   <th className="py-3 px-4">Assessment</th>
@@ -171,14 +171,14 @@ export default function DecisionsPage() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+              <tbody className="divide-y border-subtle font-medium">
                 {history.map((item) => {
                   const isSelected = selectedRuns.includes(item.id);
                   return (
                     <tr
                       key={item.id}
-                      className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
-                        isSelected ? "bg-sky-50/40 dark:bg-sky-950/20" : ""
+                      className={`hover:bg-surface-elevated/60 transition-colors ${
+                        isSelected ? "bg-accent/10" : ""
                       }`}
                     >
                       <td className="py-3 px-4">
@@ -186,13 +186,13 @@ export default function DecisionsPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectRun(item.id)}
-                          className="rounded text-sky-600 focus:ring-sky-500"
+                          className="rounded text-accent focus:ring-accent"
                         />
                       </td>
                       <td className="py-3 px-4">
                         <Link
                           href={`/analyze?symbol=${item.symbol}`}
-                          className="font-bold text-sm text-slate-900 dark:text-white hover:underline"
+                          className="font-bold text-sm text-primary hover:text-accent transition-colors"
                         >
                           {item.symbol}
                         </Link>
@@ -210,24 +210,24 @@ export default function DecisionsPage() {
                           size="sm"
                         />
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold tabular-nums text-slate-700 dark:text-slate-300">
+                      <td className="py-3 px-4 font-mono font-bold tabular-nums text-primary">
                         {item.confidence}%
                       </td>
                       <td className="py-3 px-4">
-                        <span className="text-[11px] text-slate-600 dark:text-slate-400">
+                        <span className="text-[11px] text-secondary">
                           {item.suitability_verdict || "General"}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
+                      <td className="py-3 px-4 text-secondary-muted">
                         {item.conflict_level}
                       </td>
-                      <td className="py-3 px-4 text-slate-400 text-[11px]">
+                      <td className="py-3 px-4 text-secondary-muted text-[11px]">
                         {item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/analyze?symbol=${item.symbol}`}
-                          className="text-sky-600 dark:text-sky-400 font-bold hover:underline"
+                          className="text-accent font-bold hover:underline"
                         >
                           Inspect →
                         </Link>

@@ -92,12 +92,12 @@ export default function ComparePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
-            <Scale className="w-5 h-5 text-[#C9A96E]" />
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-display">
+            <Scale className="w-5 h-5 text-accent" />
+            <h1 className="text-xl sm:text-2xl font-extrabold text-primary font-display">
               Instrument Comparison
             </h1>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-secondary-muted mt-0.5">
             Side-by-side evaluation of real price action, sector classifications, and data completeness.
           </p>
         </div>
@@ -107,11 +107,11 @@ export default function ComparePage() {
           {selectedSymbols.map((s) => (
             <span
               key={s}
-              className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200"
+              className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-surface-elevated border border-subtle text-xs font-bold text-primary"
             >
               <span>{s}</span>
               {selectedSymbols.length > 2 && (
-                <button onClick={() => handleRemoveSymbol(s)} className="hover:text-rose-500">
+                <button onClick={() => handleRemoveSymbol(s)} className="hover:text-negative">
                   <X className="w-3 h-3" />
                 </button>
               )}
@@ -121,7 +121,7 @@ export default function ComparePage() {
       </div>
 
       {errorMsg && (
-        <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 rounded-xl text-xs">
+        <div className="p-3 bg-negative/10 border border-negative/20 text-negative rounded-xl text-xs font-medium">
           {errorMsg}
         </div>
       )}
@@ -129,28 +129,28 @@ export default function ComparePage() {
       {/* Add Symbol Input (if < 4 symbols) */}
       {selectedSymbols.length < 4 && (
         <div className="relative max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+          <Search className="w-4 h-4 text-secondary-muted absolute left-3 top-3 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Add another symbol to compare (e.g. HDFCBANK, TATAMOTORS)..."
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-sky-500"
+            className="w-full bg-surface-elevated border border-subtle rounded-xl pl-9 pr-4 py-2 text-xs text-primary placeholder-secondary-muted focus:outline-none focus:ring-2 focus:ring-accent"
           />
 
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 max-h-56 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-subtle rounded-2xl shadow-xl z-30 max-h-56 overflow-y-auto">
               {searchResults.map((s) => (
                 <div
                   key={s.symbol}
                   onClick={() => handleAddSymbol(s.symbol)}
-                  className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center justify-between cursor-pointer border-b border-slate-100 dark:border-slate-700/40"
+                  className="p-3 hover:bg-surface-elevated flex items-center justify-between cursor-pointer border-b border-subtle last:border-0"
                 >
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-white">{s.symbol}</span>
-                    <span className="text-[11px] text-slate-400 ml-2">{s.name}</span>
+                    <span className="font-bold text-xs text-primary">{s.symbol}</span>
+                    <span className="text-[11px] text-secondary-muted ml-2">{s.name}</span>
                   </div>
-                  <button className="px-2 py-1 bg-slate-900 dark:bg-sky-500 text-white rounded text-[10px] font-bold">
+                  <button className="px-2.5 py-1 bg-accent text-accent-foreground rounded-full text-[10px] font-bold">
                     Compare
                   </button>
                 </div>
@@ -168,15 +168,15 @@ export default function ComparePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 uppercase text-[10px] tracking-wider">
+                <tr className="border-b border-subtle bg-surface-elevated/40 text-secondary-muted uppercase text-[10px] tracking-wider">
                   <th className="py-3 px-4 font-bold">Metric / Indicator</th>
                   {comparisonData.map((c) => (
-                    <th key={c.symbol} className="py-3 px-4 font-bold text-slate-900 dark:text-white text-base">
+                    <th key={c.symbol} className="py-3 px-4 font-bold text-primary text-base">
                       <div className="flex items-center justify-between">
                         <span>{c.symbol}</span>
                         <Link
                           href={`/analyze?symbol=${c.symbol}`}
-                          className="text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center space-x-0.5"
+                          className="text-[10px] font-bold text-accent hover:underline flex items-center space-x-0.5"
                         >
                           <Sparkles className="w-3 h-3" />
                           <span>Investigate</span>
@@ -186,12 +186,12 @@ export default function ComparePage() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+              <tbody className="divide-y border-subtle font-medium">
                 {/* Company Name */}
                 <tr>
-                  <td className="py-3 px-4 text-slate-500 font-semibold">Security Name</td>
+                  <td className="py-3 px-4 text-secondary-muted font-semibold">Security Name</td>
                   {comparisonData.map((c) => (
-                    <td key={c.symbol} className="py-3 px-4 text-slate-800 dark:text-slate-200 font-bold">
+                    <td key={c.symbol} className="py-3 px-4 text-primary font-bold">
                       {c.name}
                     </td>
                   ))}
@@ -199,10 +199,10 @@ export default function ComparePage() {
 
                 {/* Sector */}
                 <tr>
-                  <td className="py-3 px-4 text-slate-500 font-semibold">Sector Classification</td>
+                  <td className="py-3 px-4 text-secondary-muted font-semibold">Sector Classification</td>
                   {comparisonData.map((c) => (
-                    <td key={c.symbol} className="py-3 px-4 text-slate-700 dark:text-slate-300">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs">
+                    <td key={c.symbol} className="py-3 px-4 text-secondary">
+                      <span className="px-2.5 py-0.5 rounded-full bg-surface-elevated border border-subtle text-xs">
                         {c.sector}
                       </span>
                     </td>
@@ -211,9 +211,9 @@ export default function ComparePage() {
 
                 {/* Current Price */}
                 <tr>
-                  <td className="py-3 px-4 text-slate-500 font-semibold">Latest Price</td>
+                  <td className="py-3 px-4 text-secondary-muted font-semibold">Latest Price</td>
                   {comparisonData.map((c) => (
-                    <td key={c.symbol} className="py-3 px-4 font-mono font-extrabold text-sm text-slate-900 dark:text-white tabular-nums">
+                    <td key={c.symbol} className="py-3 px-4 font-mono font-extrabold text-sm text-primary tabular-nums">
                       {c.price ? `₹${Number(c.price).toFixed(2)}` : "—"}
                     </td>
                   ))}
@@ -221,13 +221,13 @@ export default function ComparePage() {
 
                 {/* 1D Change */}
                 <tr>
-                  <td className="py-3 px-4 text-slate-500 font-semibold">1D Performance</td>
+                  <td className="py-3 px-4 text-secondary-muted font-semibold">1D Performance</td>
                   {comparisonData.map((c) => {
                     const isPos = typeof c.change_pct === "number" && c.change_pct >= 0;
                     return (
                       <td key={c.symbol} className="py-3 px-4 font-mono font-bold tabular-nums">
                         {typeof c.change_pct === "number" ? (
-                          <span className={isPos ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${isPos ? "bg-accent/10 text-accent border border-accent/20" : "bg-negative/10 text-negative border border-negative/20"}`}>
                             {isPos ? "+" : ""}{c.change_pct.toFixed(2)}%
                           </span>
                         ) : "—"}
@@ -238,9 +238,9 @@ export default function ComparePage() {
 
                 {/* Primary Exchange */}
                 <tr>
-                  <td className="py-3 px-4 text-slate-500 font-semibold">Exchange</td>
+                  <td className="py-3 px-4 text-secondary-muted font-semibold">Exchange</td>
                   {comparisonData.map((c) => (
-                    <td key={c.symbol} className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                    <td key={c.symbol} className="py-3 px-4 text-secondary">
                       {c.exchange || "NSE"}
                     </td>
                   ))}
@@ -248,7 +248,7 @@ export default function ComparePage() {
 
                 {/* Data Freshness */}
                 <tr>
-                  <td className="py-3 px-4 text-slate-500 font-semibold">Data Freshness & Completeness</td>
+                  <td className="py-3 px-4 text-secondary-muted font-semibold">Data Freshness & Completeness</td>
                   {comparisonData.map((c) => (
                     <td key={c.symbol} className="py-3 px-4">
                       <StatusBadge
@@ -265,7 +265,7 @@ export default function ComparePage() {
         </div>
       ) : (
         <EmptyState
-          icon={<Scale className="w-8 h-8 text-[#C9A96E]" />}
+          icon={<Scale className="w-8 h-8 text-accent" />}
           title="Select At Least Two Instruments"
           description="Use the search bar above to select securities to compare on valuation, price, and sector fundamentals."
         />

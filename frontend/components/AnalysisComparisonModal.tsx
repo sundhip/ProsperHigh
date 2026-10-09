@@ -37,30 +37,30 @@ export const AnalysisComparisonModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-2xl w-full border border-slate-200 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="bg-surface rounded-3xl p-6 max-w-2xl w-full border border-subtle shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-subtle pb-3">
           <div className="flex items-center space-x-2">
-            <GitCompare className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-bold text-charcoal font-manrope">
+            <GitCompare className="w-5 h-5 text-accent" />
+            <h3 className="text-lg font-bold text-primary font-display">
               Compare Analysis Runs (Historical Diff)
             </h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-charcoal p-1">
+          <button onClick={onClose} className="text-secondary-muted hover:text-primary p-1 rounded-full">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Selector Controls */}
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-          <label className="text-xs font-bold text-slate-600 uppercase">
+        <div className="bg-surface-elevated/40 p-4 rounded-2xl border border-subtle space-y-3">
+          <label className="text-xs font-bold text-secondary uppercase">
             Select Prior Run to Compare Against Current Run
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <select
               value={selectedPriorId}
               onChange={(e) => setSelectedPriorId(e.target.value)}
-              className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800"
+              className="flex-1 bg-surface border border-subtle rounded-xl px-3 py-2 text-xs font-bold text-primary outline-none focus:ring-2 focus:ring-accent"
             >
               {historyRuns
                 .filter((r) => r.id !== currentAnalysisId)
@@ -74,7 +74,7 @@ export const AnalysisComparisonModal: React.FC<Props> = ({
             <button
               onClick={handleRunCompare}
               disabled={comparing || !selectedPriorId}
-              className="px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow hover:bg-primary-dark transition-all flex items-center justify-center space-x-1.5"
+              className="px-5 py-2 bg-accent text-accent-foreground text-xs font-bold rounded-full shadow hover:opacity-90 transition-all flex items-center justify-center space-x-1.5"
             >
               {comparing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>Compute Diff →</span>}
             </button>
@@ -82,7 +82,7 @@ export const AnalysisComparisonModal: React.FC<Props> = ({
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
+          <div className="p-3 bg-negative/10 border border-negative/20 text-negative text-xs rounded-xl flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -93,29 +93,29 @@ export const AnalysisComparisonModal: React.FC<Props> = ({
           <div className="space-y-4 pt-2">
             {/* Header Comparison Badge */}
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Prior Run</span>
-                <div className="text-base font-black text-charcoal mt-0.5">
+              <div className="p-3 bg-surface-elevated/40 rounded-2xl border border-subtle">
+                <span className="text-[10px] uppercase font-bold text-secondary-muted">Prior Run</span>
+                <div className="text-base font-black text-primary mt-0.5">
                   {diffResult.decision_a} ({diffResult.net_score_a} pts)
                 </div>
               </div>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Current Run</span>
-                <div className="text-base font-black text-charcoal mt-0.5">
+              <div className="p-3 bg-surface-elevated/40 rounded-2xl border border-subtle">
+                <span className="text-[10px] uppercase font-bold text-secondary-muted">Current Run</span>
+                <div className="text-base font-black text-primary mt-0.5">
                   {diffResult.decision_b} ({diffResult.net_score_b} pts)
                 </div>
               </div>
             </div>
 
             {/* Score Delta */}
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+            <div className="p-4 bg-surface-elevated/40 rounded-2xl border border-subtle flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-slate-600">Net Score Delta</span>
-                <p className="text-[11px] text-slate-500">Change in synthesized specialist score</p>
+                <span className="text-xs font-bold text-primary">Net Score Delta</span>
+                <p className="text-[11px] text-secondary-muted">Change in synthesized specialist score</p>
               </div>
               <div
-                className={`text-xl font-black ${
-                  diffResult.score_delta >= 0 ? "text-positive" : "text-negative"
+                className={`text-xl font-black font-mono tabular-nums ${
+                  diffResult.score_delta >= 0 ? "text-accent" : "text-negative"
                 }`}
               >
                 {diffResult.score_delta > 0 ? `+${diffResult.score_delta}` : diffResult.score_delta} pts
@@ -124,16 +124,16 @@ export const AnalysisComparisonModal: React.FC<Props> = ({
 
             {/* Plain-Language Root Causes */}
             <div className="space-y-2">
-              <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">
                 Root Causes for Shift
               </span>
               <div className="space-y-1.5">
                 {diffResult.root_causes?.map((cause: string, idx: number) => (
                   <div
                     key={idx}
-                    className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 font-medium flex items-start space-x-2"
+                    className="p-3 bg-surface rounded-xl border border-subtle text-xs text-secondary font-medium flex items-start space-x-2"
                   >
-                    <span className="text-primary font-bold">•</span>
+                    <span className="text-accent font-bold">•</span>
                     <span>{cause}</span>
                   </div>
                 ))}
@@ -142,10 +142,10 @@ export const AnalysisComparisonModal: React.FC<Props> = ({
           </div>
         )}
 
-        <div className="flex justify-end pt-3 border-t border-slate-100">
+        <div className="flex justify-end pt-3 border-t border-subtle">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-xs font-bold border border-slate-300 rounded-xl text-slate-600 hover:bg-slate-50"
+            className="px-5 py-2 text-xs font-bold border border-subtle rounded-full text-secondary hover:text-primary hover:bg-surface-elevated"
           >
             Close
           </button>

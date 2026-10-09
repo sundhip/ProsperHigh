@@ -100,68 +100,68 @@ export default function WatchlistPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
-            <Star className="w-5 h-5 text-[#C9A96E]" />
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-display">
+            <Star className="w-5 h-5 text-accent" />
+            <h1 className="text-xl sm:text-2xl font-extrabold text-primary font-display">
               Securities Watchlist
             </h1>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-secondary-muted mt-0.5">
             Track monitored securities with live quotes and direct paths to 7-agent AI investigation.
           </p>
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-semibold text-secondary-muted">
             {watchlist.length} Securities Monitored
           </span>
         </div>
       </div>
 
       {feedbackMsg && (
-        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs flex items-center space-x-2">
+        <div className="p-3 bg-accent/10 border border-accent/20 text-accent rounded-xl text-xs flex items-center space-x-2 font-medium">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{feedbackMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 rounded-xl text-xs flex items-center space-x-2">
+        <div className="p-3 bg-negative/10 border border-negative/20 text-negative rounded-xl text-xs flex items-center space-x-2 font-medium">
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Add Instrument Bar */}
-      <div className="prosper-card p-4 space-y-3">
-        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+      <div className="prosper-card p-5 space-y-3">
+        <div className="text-xs font-bold text-secondary uppercase tracking-wider">
           Add Instrument to Watchlist
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+            <Search className="w-4 h-4 text-secondary-muted absolute left-3 top-3 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search ticker symbol or company name (e.g. INFY, TCS)..."
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-sky-500"
+              className="w-full bg-surface-elevated border border-subtle rounded-xl pl-9 pr-4 py-2 text-xs text-primary placeholder-secondary-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
 
             {/* Quick search dropdown */}
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 max-h-56 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-subtle rounded-2xl shadow-xl z-30 max-h-56 overflow-y-auto">
                 {searchResults.map((s) => (
                   <div
                     key={s.symbol}
                     onClick={() => handleAdd(s.symbol)}
-                    className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center justify-between cursor-pointer border-b border-slate-100 dark:border-slate-700/40"
+                    className="p-3 hover:bg-surface-elevated flex items-center justify-between cursor-pointer border-b border-subtle last:border-0"
                   >
                     <div>
-                      <span className="font-bold text-xs text-slate-900 dark:text-white">{s.symbol}</span>
-                      <span className="text-[11px] text-slate-400 ml-2">{s.name}</span>
+                      <span className="font-bold text-xs text-primary">{s.symbol}</span>
+                      <span className="text-[11px] text-secondary-muted ml-2">{s.name}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {s.price && <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">₹{s.price}</span>}
-                      <button className="px-2 py-1 bg-slate-900 dark:bg-sky-500 text-white rounded text-[10px] font-bold">
+                      {s.price && <span className="font-mono text-xs font-bold text-primary tabular-nums">₹{s.price}</span>}
+                      <button className="px-2.5 py-1 bg-accent text-accent-foreground rounded-full text-[10px] font-bold">
                         Add
                       </button>
                     </div>
@@ -177,19 +177,19 @@ export default function WatchlistPage() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Optional note / thesis..."
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-sky-500"
+              className="w-full bg-surface-elevated border border-subtle rounded-xl px-3 py-2 text-xs text-primary placeholder-secondary-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
         </div>
 
         {/* Quick Suggestion Chips */}
         <div className="flex items-center space-x-2 pt-1 text-xs">
-          <span className="text-slate-400 text-[11px]">Popular universe:</span>
+          <span className="text-secondary-muted text-[11px]">Popular universe:</span>
           {SUGGESTIONS.map((sym) => (
             <button
               key={sym}
               onClick={() => handleAdd(sym)}
-              className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold"
+              className="px-2.5 py-0.5 rounded-full bg-surface-elevated border border-subtle hover:border-accent text-secondary hover:text-primary text-[10px] font-bold transition-colors"
             >
               +{sym}
             </button>
@@ -205,7 +205,7 @@ export default function WatchlistPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-semibold uppercase text-[10px] tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
+                <tr className="border-b border-subtle text-secondary-muted font-semibold uppercase text-[10px] tracking-wider bg-surface-elevated/40">
                   <th className="py-3 px-4">Instrument</th>
                   <th className="py-3 px-4">Sector</th>
                   <th className="py-3 px-4 text-right">Price</th>
@@ -214,49 +214,49 @@ export default function WatchlistPage() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+              <tbody className="divide-y border-subtle font-medium">
                 {watchlist.map((item) => {
                   const isPositive = typeof item.change_pct === "number" && item.change_pct >= 0;
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr key={item.id} className="hover:bg-surface-elevated/60 transition-colors">
                       <td className="py-3 px-4">
                         <Link
                           href={`/analyze?symbol=${item.symbol}`}
-                          className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#C9A96E] dark:hover:text-sky-400"
+                          className="font-bold text-sm text-primary hover:text-accent transition-colors"
                         >
                           {item.symbol}
                         </Link>
-                        <div className="text-[11px] text-slate-400">{item.name}</div>
+                        <div className="text-[11px] text-secondary-muted">{item.name}</div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-surface-elevated border border-subtle text-secondary">
                           {item.sector || "General"}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 dark:text-white tabular-nums">
+                      <td className="py-3 px-4 text-right font-mono font-bold text-primary tabular-nums">
                         {item.current_price ? `₹${Number(item.current_price).toFixed(2)}` : "—"}
                       </td>
                       <td className="py-3 px-4 text-right font-mono tabular-nums">
                         {typeof item.change_pct === "number" ? (
-                          <span className={`font-bold ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${isPositive ? "bg-accent/10 text-accent border border-accent/20" : "bg-negative/10 text-negative border border-negative/20"}`}>
                             {isPositive ? "+" : ""}{item.change_pct.toFixed(2)}%
                           </span>
                         ) : "—"}
                       </td>
-                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs max-w-xs truncate">
-                        {item.notes || <span className="text-slate-300 dark:text-slate-600 italic">No notes</span>}
+                      <td className="py-3 px-4 text-secondary text-xs max-w-xs truncate">
+                        {item.notes || <span className="text-secondary-muted italic">No notes</span>}
                       </td>
                       <td className="py-3 px-4 text-right space-x-2">
                         <Link
                           href={`/analyze?symbol=${item.symbol}`}
-                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-900 dark:bg-sky-500 text-white rounded-lg text-xs font-bold hover:opacity-90 transition-opacity"
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-accent text-accent-foreground rounded-full text-xs font-bold hover:opacity-90 transition-opacity"
                         >
                           <Sparkles className="w-3 h-3" />
                           <span>Investigate</span>
                         </Link>
                         <button
                           onClick={() => handleRemove(item.symbol)}
-                          className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                          className="p-1.5 text-secondary-muted hover:text-negative transition-colors rounded-full hover:bg-surface-elevated"
                           title="Remove from watchlist"
                           aria-label="Remove from watchlist"
                         >
@@ -272,7 +272,7 @@ export default function WatchlistPage() {
         </div>
       ) : (
         <EmptyState
-          icon={<Star className="w-8 h-8 text-[#C9A96E]" />}
+          icon={<Star className="w-8 h-8 text-accent" />}
           title="Watchlist is Empty"
           description="Add securities using the search bar above to monitor stock movements and stay ahead of key filing disclosures."
         />

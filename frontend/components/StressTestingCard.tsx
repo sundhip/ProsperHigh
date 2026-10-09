@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, TrendingDown, Play, RefreshCw, AlertCircle, Shield } from "lucide-react";
+import { AlertTriangle, TrendingDown, Play, RefreshCw, AlertCircle } from "lucide-react";
 import { runStressTest } from "@/lib/api";
 
 interface Props {
@@ -38,32 +38,34 @@ export const StressTestingCard: React.FC<Props> = ({ portfolioId }) => {
   };
 
   return (
-    <div className="prosper-card p-6 border-l-4 border-l-rose-500 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div className="flex items-center space-x-2">
-          <AlertTriangle className="w-5 h-5 text-rose-500" />
+    <div className="prosper-card p-6 space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-subtle pb-3">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-xl bg-surface-elevated text-negative flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
           <div>
-            <h3 className="text-base font-extrabold text-charcoal font-manrope">
-              Portfolio Stress Testing & Scenario Shocks
+            <h3 className="text-base font-extrabold text-primary font-display">
+              Portfolio Stress Testing & Shock Scenarios
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-secondary-muted">
               Deterministic beta-weighted simulations of market and sector drawdowns
             </p>
           </div>
         </div>
 
-        <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
-          Deterministic Risk Model
+        <span className="text-[10px] font-extrabold uppercase tracking-wider text-negative bg-negative/10 px-3 py-1 rounded-full border border-negative/20">
+          Beta Risk Model
         </span>
       </div>
 
-      {/* Preset Buttons & Custom Controls */}
+      {/* Preset Pill Buttons & Custom Controls */}
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">
           {[
-            { key: "MARKET_CORRECTION_10", label: "📉 Market Correction (-10%)" },
+            { key: "MARKET_CORRECTION_10", label: "📉 Correction (-10%)" },
             { key: "TECH_SELLOFF_15", label: "💻 Tech Sell-off (-15%)" },
-            { key: "SEVERE_BEAR_25", label: "🐻 Severe Bear Market (-25%)" },
+            { key: "SEVERE_BEAR_25", label: "🐻 Severe Bear (-25%)" },
           ].map((preset) => (
             <button
               key={preset.key}
@@ -72,10 +74,10 @@ export const StressTestingCard: React.FC<Props> = ({ portfolioId }) => {
                 setScenarioKey(preset.key);
                 setUseCustom(false);
               }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+              className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${
                 !useCustom && scenarioKey === preset.key
-                  ? "bg-rose-50 border-rose-300 text-rose-800 shadow-xs"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                  ? "bg-negative/15 border-negative/30 text-negative shadow-xs"
+                  : "bg-surface-elevated border-border-subtle text-secondary hover:text-primary"
               }`}
             >
               {preset.label}
@@ -85,10 +87,10 @@ export const StressTestingCard: React.FC<Props> = ({ portfolioId }) => {
           <button
             type="button"
             onClick={() => setUseCustom(true)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+            className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${
               useCustom
-                ? "bg-rose-50 border-rose-300 text-rose-800 shadow-xs"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                ? "bg-negative/15 border-negative/30 text-negative shadow-xs"
+                : "bg-surface-elevated border-border-subtle text-secondary hover:text-primary"
             }`}
           >
             ⚙ Custom Shock %
@@ -96,91 +98,96 @@ export const StressTestingCard: React.FC<Props> = ({ portfolioId }) => {
         </div>
 
         {useCustom && (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center space-x-4">
-            <span className="text-xs font-bold text-slate-700">Market Shock %:</span>
+          <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle flex items-center space-x-4">
+            <span className="text-xs font-bold text-primary">Market Shock %:</span>
             <input
               type="range"
-              min="-40"
-              max="0"
+              min="-50"
+              max="50"
               value={customShock}
               onChange={(e) => setCustomShock(Number(e.target.value))}
-              className="flex-1 accent-rose-500"
+              className="flex-1 accent-negative"
             />
-            <span className="text-sm font-black text-rose-600 w-12 text-right">
-              {customShock}%
-            </span>
+            <span className="font-mono text-sm font-bold text-negative">{customShock}%</span>
           </div>
         )}
 
-        <div className="flex justify-end">
-          <button
-            onClick={handleRunStress}
-            disabled={loading}
-            className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow transition-all flex items-center space-x-1.5"
-          >
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <TrendingDown className="w-4 h-4" />}
-            <span>Execute Stress Shock Test</span>
-          </button>
-        </div>
+        <button
+          onClick={handleRunStress}
+          disabled={loading}
+          className="px-6 py-2.5 bg-negative text-white font-extrabold text-xs rounded-full shadow hover:opacity-90 transition-all flex items-center space-x-1.5"
+        >
+          {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+          <span>Run Stress Scenario Simulation</span>
+        </button>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
+        <div className="p-3 bg-negative/10 border border-negative/20 text-negative text-xs rounded-xl flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Results View */}
+      {/* Stress Results View */}
       {result && (
-        <div className="space-y-4 pt-2 bg-rose-50/40 p-4 rounded-xl border border-rose-200/80">
+        <div className="space-y-4 pt-2">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3 bg-white rounded-xl border border-slate-200">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Projected Portfolio Impact</span>
-              <div className="text-xl font-black text-rose-600 mt-0.5">
-                -₹{Math.abs(result.total_loss_amount || 0).toLocaleString("en-IN")}
+            <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle">
+              <span className="text-[10px] uppercase font-bold text-secondary-muted">Baseline Value</span>
+              <div className="text-xl font-black text-primary font-mono mt-1">
+                ₹{result.baseline_total_value?.toLocaleString("en-IN") || 0}
               </div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-slate-200">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Total Drawdown %</span>
-              <div className="text-xl font-black text-rose-600 mt-0.5">
-                {result.drawdown_pct}%
+            <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle">
+              <span className="text-[10px] uppercase font-bold text-secondary-muted">Post-Shock Value</span>
+              <div className="text-xl font-black text-negative font-mono mt-1">
+                ₹{result.stressed_total_value?.toLocaleString("en-IN") || 0}
               </div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-slate-200">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Post-Shock Portfolio Value</span>
-              <div className="text-xl font-black text-charcoal mt-0.5">
-                ₹{result.post_shock_value?.toLocaleString("en-IN") || 0}
+            <div className="p-4 bg-surface-elevated rounded-2xl border border-border-subtle">
+              <span className="text-[10px] uppercase font-bold text-secondary-muted">Portfolio Drawdown</span>
+              <div className="text-xl font-black text-negative font-mono mt-1">
+                {result.drawdown_pct ? `${result.drawdown_pct.toFixed(2)}%` : "0%"}
+              </div>
+              <div className="text-[10px] text-secondary-muted mt-0.5">
+                Loss: ₹{Math.abs(result.drawdown_amount || 0).toLocaleString("en-IN")}
               </div>
             </div>
           </div>
 
-          {/* Holding Breakdown */}
           {result.holding_impacts && result.holding_impacts.length > 0 && (
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                Top Vulnerable Positions Under Scenario
-              </span>
-              <div className="space-y-1.5">
-                {result.holding_impacts.slice(0, 5).map((h: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-semibold"
-                  >
-                    <div>
-                      <span className="font-bold text-primary mr-2">{h.symbol}</span>
-                      <span className="text-[11px] text-slate-500 font-mono">
-                        (Beta: {h.beta || 1.0})
-                      </span>
-                    </div>
-                    <div className="text-rose-600 font-black">
-                      -₹{Math.abs(h.loss_amount || 0).toLocaleString("en-IN")} ({h.shock_pct}%)
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="overflow-x-auto pt-2">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-border-subtle text-[10px] uppercase text-secondary-muted tracking-wider font-semibold">
+                    <th className="pb-2">Holding</th>
+                    <th className="pb-2 text-right">Beta</th>
+                    <th className="pb-2 text-right">Current Value</th>
+                    <th className="pb-2 text-right">Stressed Value</th>
+                    <th className="pb-2 text-right">Drawdown</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle">
+                  {result.holding_impacts.map((h: any) => (
+                    <tr key={h.symbol} className="hover:bg-surface-elevated/60">
+                      <td className="py-2.5 font-bold text-primary">{h.symbol}</td>
+                      <td className="py-2.5 text-right font-mono text-secondary">{h.beta || 1.0}</td>
+                      <td className="py-2.5 text-right font-mono text-secondary">
+                        ₹{Number(h.current_value).toLocaleString("en-IN")}
+                      </td>
+                      <td className="py-2.5 text-right font-mono text-primary font-bold">
+                        ₹{Number(h.stressed_value).toLocaleString("en-IN")}
+                      </td>
+                      <td className="py-2.5 text-right font-mono text-negative font-bold">
+                        {h.drawdown_pct}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

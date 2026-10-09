@@ -37,17 +37,17 @@ export default function MarketIntelligencePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
-            <Compass className="w-5 h-5 text-[#C9A96E]" />
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-display">
+            <Compass className="w-5 h-5 text-accent" />
+            <h1 className="text-xl sm:text-2xl font-extrabold text-primary font-display">
               Market Intelligence
             </h1>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-secondary-muted mt-0.5">
             Macro indices, universe movers, sector rotation, and corporate statutory disclosure alerts.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center space-x-2 text-xs text-secondary-muted">
           <Clock className="w-3.5 h-3.5" />
           <span>Feed as of {intel?.as_of || "UTC"}</span>
         </div>
@@ -78,31 +78,31 @@ export default function MarketIntelligencePage() {
             <div className="prosper-card p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                  <TrendingUp className="w-4 h-4 text-accent" />
+                  <h3 className="text-sm font-bold text-primary font-display">
                     Top Universe Gainers
                   </h3>
                 </div>
-                <span className="text-[10px] font-semibold text-slate-400">1D Percent</span>
+                <span className="text-[10px] font-semibold text-secondary-muted">1D Percent</span>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y border-subtle">
                 {(intel?.top_gainers || []).map((stock: any) => (
                   <div key={stock.symbol} className="py-2.5 flex items-center justify-between">
                     <div>
                       <Link
                         href={`/analyze?symbol=${stock.symbol}`}
-                        className="font-bold text-xs text-slate-900 dark:text-white hover:text-sky-500 transition-colors"
+                        className="font-bold text-xs text-primary hover:text-accent transition-colors"
                       >
                         {stock.symbol}
                       </Link>
-                      <div className="text-[10px] text-slate-400">{stock.name} • {stock.sector}</div>
+                      <div className="text-[10px] text-secondary-muted">{stock.name} • {stock.sector}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">
+                      <div className="text-xs font-mono font-bold text-primary tabular-nums">
                         ₹{Number(stock.price).toFixed(2)}
                       </div>
-                      <div className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                      <div className="text-[10px] font-mono font-bold text-accent tabular-nums">
                         +{stock.change_pct}%
                       </div>
                     </div>
@@ -115,39 +115,39 @@ export default function MarketIntelligencePage() {
             <div className="prosper-card p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
-                  <TrendingDown className="w-4 h-4 text-rose-600" />
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                  <TrendingDown className="w-4 h-4 text-negative" />
+                  <h3 className="text-sm font-bold text-primary font-display">
                     Universe Declines
                   </h3>
                 </div>
-                <span className="text-[10px] font-semibold text-slate-400">1D Percent</span>
+                <span className="text-[10px] font-semibold text-secondary-muted">1D Percent</span>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y border-subtle">
                 {(intel?.top_losers || []).length > 0 ? (
                   intel.top_losers.map((stock: any) => (
                     <div key={stock.symbol} className="py-2.5 flex items-center justify-between">
                       <div>
                         <Link
                           href={`/analyze?symbol=${stock.symbol}`}
-                          className="font-bold text-xs text-slate-900 dark:text-white hover:text-sky-500 transition-colors"
+                          className="font-bold text-xs text-primary hover:text-accent transition-colors"
                         >
                           {stock.symbol}
                         </Link>
-                        <div className="text-[10px] text-slate-400">{stock.name} • {stock.sector}</div>
+                        <div className="text-[10px] text-secondary-muted">{stock.name} • {stock.sector}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">
+                        <div className="text-xs font-mono font-bold text-primary tabular-nums">
                           ₹{Number(stock.price).toFixed(2)}
                         </div>
-                        <div className="text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400 tabular-nums">
+                        <div className="text-[10px] font-mono font-bold text-negative tabular-nums">
                           {stock.change_pct}%
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="py-6 text-center text-xs text-slate-400">
+                  <div className="py-6 text-center text-xs text-secondary-muted">
                     No negative declines recorded in current universe session.
                   </div>
                 )}
@@ -159,12 +159,12 @@ export default function MarketIntelligencePage() {
           <div className="prosper-card p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-[#C9A96E]" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                <Layers className="w-4 h-4 text-accent" />
+                <h3 className="text-sm font-bold text-primary font-display">
                   Sector Performance & Breadth
                 </h3>
               </div>
-              <span className="text-[10px] font-semibold text-slate-400">Weighted Average</span>
+              <span className="text-[10px] font-semibold text-secondary-muted">Weighted Average</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -173,16 +173,16 @@ export default function MarketIntelligencePage() {
                 return (
                   <div
                     key={sec.sector}
-                    className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between"
+                    className="p-3 rounded-2xl border border-subtle bg-surface-elevated/40 flex items-center justify-between"
                   >
                     <div>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">{sec.sector}</div>
-                      <div className="text-[10px] text-slate-400">{sec.stock_count} tracked instruments</div>
+                      <div className="text-xs font-bold text-primary">{sec.sector}</div>
+                      <div className="text-[10px] text-secondary-muted">{sec.stock_count} tracked instruments</div>
                     </div>
                     <div className="text-right">
                       <span
                         className={`text-xs font-mono font-bold tabular-nums ${
-                          isPos ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                          isPos ? "text-accent" : "text-negative"
                         }`}
                       >
                         {isPos ? "+" : ""}{sec.avg_change_pct}%
@@ -198,14 +198,14 @@ export default function MarketIntelligencePage() {
           <div className="prosper-card p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-slate-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                <FileText className="w-4 h-4 text-secondary-muted" />
+                <h3 className="text-sm font-bold text-primary font-display">
                   Exchange Statutory Disclosures & Filings
                 </h3>
               </div>
               <Link
                 href="/research"
-                className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center space-x-1"
+                className="text-xs font-bold text-accent hover:underline flex items-center space-x-1"
               >
                 <span>Document Reader</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -216,28 +216,28 @@ export default function MarketIntelligencePage() {
               {(intel?.recent_filings || []).map((filing: any) => (
                 <div
                   key={filing.id}
-                  className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/30 flex flex-col justify-between space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                  className="p-4 rounded-2xl border border-subtle bg-surface-elevated/40 flex flex-col justify-between space-y-2 hover:border-accent/40 transition-all"
                 >
                   <div>
                     <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span className="font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                      <span className="font-bold px-2.5 py-0.5 rounded-full bg-surface-elevated border border-subtle text-primary">
                         {filing.symbol}
                       </span>
-                      <span className="text-slate-400">{filing.reporting_period || "Statutory"}</span>
+                      <span className="text-secondary-muted">{filing.reporting_period || "Statutory"}</span>
                     </div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2">
+                    <h4 className="text-xs font-bold text-primary line-clamp-2">
                       {filing.title}
                     </h4>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[11px]">
-                    <span className="text-slate-400">{filing.source}</span>
+                  <div className="flex items-center justify-between pt-2 border-t border-subtle text-[11px]">
+                    <span className="text-secondary-muted">{filing.source}</span>
                     {filing.source_url ? (
                       <a
                         href={filing.source_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sky-600 dark:text-sky-400 font-semibold hover:underline flex items-center space-x-1"
+                        className="text-accent font-semibold hover:underline flex items-center space-x-1"
                       >
                         <span>Official Filing</span>
                         <ExternalLink className="w-3 h-3" />
@@ -245,7 +245,7 @@ export default function MarketIntelligencePage() {
                     ) : (
                       <Link
                         href={`/research?doc=${filing.id}`}
-                        className="text-sky-600 dark:text-sky-400 font-semibold hover:underline"
+                        className="text-accent font-semibold hover:underline"
                       >
                         Inspect Document →
                       </Link>

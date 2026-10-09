@@ -56,30 +56,30 @@ export const DocumentUploadModal: React.FC<Props> = ({ onSuccess, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="bg-surface rounded-3xl max-w-lg w-full border border-subtle shadow-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-subtle pb-3">
           <div className="flex items-center space-x-2">
-            <Upload className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-extrabold text-charcoal font-manrope">
+            <Upload className="w-5 h-5 text-accent" />
+            <h3 className="text-base font-extrabold text-primary font-display">
               Upload Financial Research Document
             </h3>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-charcoal rounded-lg">
+          <button onClick={onClose} className="p-1.5 text-secondary-muted hover:text-primary rounded-full hover:bg-surface-elevated">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleUpload} className="space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
+            <div className="p-3 bg-negative/10 border border-negative/20 text-negative text-xs rounded-xl flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl flex items-center space-x-2">
+            <div className="p-3 bg-accent/10 border border-accent/20 text-accent text-xs rounded-xl flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -87,23 +87,23 @@ export const DocumentUploadModal: React.FC<Props> = ({ onSuccess, onClose }) => 
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500">Target Symbol</label>
+              <label className="text-[10px] font-black uppercase text-secondary-muted">Target Symbol</label>
               <input
                 type="text"
                 value={company}
                 onChange={(e) => setCompany(e.target.value.toUpperCase())}
                 placeholder="e.g. RELIANCE, TCS, AAPL"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 mt-1"
+                className="w-full bg-surface-elevated border border-subtle rounded-xl p-2.5 text-xs font-bold text-primary mt-1 outline-none focus:ring-2 focus:ring-accent"
                 required
               />
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-500">Document Type</label>
+              <label className="text-[10px] font-black uppercase text-secondary-muted">Document Type</label>
               <select
                 value={documentType}
                 onChange={(e) => setDocumentType(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 mt-1"
+                className="w-full bg-surface-elevated border border-subtle rounded-xl p-2.5 text-xs font-bold text-primary mt-1 outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="Corporate Disclosure">Corporate Disclosure</option>
                 <option value="Annual Report">Annual Report</option>
@@ -115,22 +115,22 @@ export const DocumentUploadModal: React.FC<Props> = ({ onSuccess, onClose }) => 
           </div>
 
           <div>
-            <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">
+            <label className="text-[10px] font-black uppercase text-secondary-muted block mb-1">
               File Selection (PDF, Markdown, TXT — max 10MB)
             </label>
-            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-primary rounded-2xl cursor-pointer bg-slate-50/50 hover:bg-slate-50 transition-all space-y-2">
-              <FileText className="w-8 h-8 text-slate-400" />
+            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-subtle hover:border-accent rounded-2xl cursor-pointer bg-surface-elevated/40 hover:bg-surface-elevated transition-all space-y-2">
+              <FileText className="w-8 h-8 text-secondary-muted" />
               {file ? (
                 <div className="text-center">
-                  <span className="text-xs font-bold text-primary block">{file.name}</span>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-xs font-bold text-accent block">{file.name}</span>
+                  <span className="text-[10px] text-secondary-muted font-mono">
                     {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </span>
                 </div>
               ) : (
                 <div className="text-center space-y-1">
-                  <span className="text-xs font-bold text-slate-700 block">Click or drag file to upload</span>
-                  <span className="text-[10px] text-slate-400">Supports PDF, TXT, MD up to 10MB</span>
+                  <span className="text-xs font-bold text-primary block">Click or drag file to upload</span>
+                  <span className="text-[10px] text-secondary-muted">Supports PDF, TXT, MD up to 10MB</span>
                 </div>
               )}
               <input
@@ -142,23 +142,23 @@ export const DocumentUploadModal: React.FC<Props> = ({ onSuccess, onClose }) => 
             </label>
           </div>
 
-          <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-            <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="flex items-center space-x-1.5 text-[11px] text-secondary bg-surface-elevated/40 p-3 rounded-2xl border border-subtle">
+            <Shield className="w-4 h-4 text-accent shrink-0" />
             <span>Uploaded documents are scanned against prompt injections and stored under user isolation.</span>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+          <div className="flex justify-end space-x-2 pt-2 border-t border-subtle">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-slate-300 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50"
+              className="px-4 py-2 border border-subtle text-secondary text-xs font-bold rounded-full hover:text-primary hover:bg-surface-elevated"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={uploading || !file}
-              className="px-6 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow hover:bg-primary-dark transition-all flex items-center space-x-1.5"
+              className="px-6 py-2 bg-accent text-accent-foreground text-xs font-bold rounded-full shadow hover:opacity-90 transition-all flex items-center space-x-1.5"
             >
               {uploading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               <span>{uploading ? "Parsing & Indexing..." : "Upload & Index Document"}</span>

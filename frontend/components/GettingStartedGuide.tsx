@@ -70,29 +70,29 @@ export const GettingStartedGuide: React.FC<GettingStartedGuideProps> = ({
   }
 
   return (
-    <div className="prosper-card p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/60 shadow-lg relative overflow-hidden">
-      {/* Background Accent glow */}
-      <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 bg-[#C9A96E]/10 rounded-full blur-2xl pointer-events-none" />
+    <div className="prosper-card p-5 sm:p-6 bg-surface text-primary border border-border-subtle relative overflow-hidden">
+      {/* Decorative accent glow */}
+      <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-accent/10 rounded-full blur-2xl pointer-events-none" />
 
       {/* Header */}
       <div className="flex items-start justify-between relative z-10">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <span className="p-1 rounded-md bg-[#C9A96E]/20 text-[#C9A96E]">
+            <span className="p-1.5 rounded-full bg-accent/15 text-accent">
               <Sparkles className="w-4 h-4" />
             </span>
-            <h3 className="text-sm sm:text-base font-extrabold text-white font-display">
-              Welcome to ProsperHigh — Getting Started Guide
+            <h3 className="text-base font-extrabold text-primary font-display">
+              Getting Started Checklist
             </h3>
           </div>
-          <p className="text-xs text-slate-300 max-w-xl">
+          <p className="text-xs text-secondary max-w-xl">
             Complete 3 foundational steps to unlock personalized financial intelligence tailored to your actual portfolio.
           </p>
         </div>
 
         <button
           onClick={handleDismiss}
-          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+          className="text-secondary-muted hover:text-primary p-1.5 rounded-full hover:bg-surface-elevated transition-colors"
           title="Dismiss guide"
           aria-label="Dismiss guide"
         >
@@ -102,13 +102,13 @@ export const GettingStartedGuide: React.FC<GettingStartedGuideProps> = ({
 
       {/* Progress Bar */}
       <div className="mt-4 relative z-10">
-        <div className="flex items-center justify-between text-xs text-slate-300 mb-1.5 font-medium">
+        <div className="flex items-center justify-between text-xs text-secondary mb-1.5 font-medium">
           <span>{completedCount} of 3 steps completed</span>
-          <span className="text-[#C9A96E] font-bold">{Math.round((completedCount / 3) * 100)}%</span>
+          <span className="text-accent font-bold">{Math.round((completedCount / 3) * 100)}%</span>
         </div>
-        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-surface-elevated rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[#C9A96E] to-emerald-400 rounded-full transition-all duration-500"
+            className="h-full bg-accent rounded-full transition-all duration-500"
             style={{ width: `${(completedCount / 3) * 100}%` }}
           />
         </div>
@@ -121,24 +121,24 @@ export const GettingStartedGuide: React.FC<GettingStartedGuideProps> = ({
           return (
             <div
               key={st.id}
-              className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
+              className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                 st.completed
-                  ? "bg-slate-800/40 border-emerald-500/30 text-slate-200"
-                  : "bg-slate-800/80 border-slate-700/80 hover:border-slate-600 text-white"
+                  ? "bg-accent/5 border-accent/20 text-primary"
+                  : "bg-surface-elevated border-border-subtle hover:border-border-default text-primary"
               }`}
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
+                  <div className="flex items-center space-x-2">
                     {st.completed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
                     ) : (
-                      <Circle className="w-4 h-4 text-slate-400 shrink-0" />
+                      <Circle className="w-4 h-4 text-secondary-muted shrink-0" />
                     )}
                     <span className="text-xs font-bold">{st.title}</span>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
+                <p className="text-[11px] text-secondary leading-snug">
                   {st.desc}
                 </p>
               </div>
@@ -146,10 +146,10 @@ export const GettingStartedGuide: React.FC<GettingStartedGuideProps> = ({
               <div className="pt-3">
                 <Link
                   href={st.href}
-                  className={`inline-flex items-center space-x-1 text-xs font-bold transition-colors ${
+                  className={`inline-flex items-center space-x-1.5 text-xs font-bold transition-colors ${
                     st.completed
-                      ? "text-emerald-400 hover:text-emerald-300"
-                      : "text-[#C9A96E] hover:text-[#e4c997]"
+                      ? "text-accent hover:underline"
+                      : "text-primary hover:text-accent"
                   }`}
                 >
                   <span>{st.completed ? "Review" : st.cta}</span>

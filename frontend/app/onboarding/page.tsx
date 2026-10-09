@@ -158,26 +158,26 @@ export default function OnboardingWizardPageV3() {
   return (
     <div className="max-w-3xl mx-auto py-8 space-y-6">
       {/* Progress Bar & Header */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+      <div className="prosper-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-extrabold text-charcoal font-manrope">
+            <Shield className="w-6 h-6 text-accent" />
+            <h1 className="text-xl font-extrabold text-primary font-display">
               Investor Profile & Financial Context
             </h1>
           </div>
-          <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1 rounded-full uppercase">
+          <span className="text-xs font-black text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase">
             Step {step} of 10
           </span>
         </div>
 
         {/* 10 Step Progress Tracker */}
-        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+        <div className="w-full bg-surface-elevated h-2.5 rounded-full overflow-hidden flex border border-subtle">
           {Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
-              className={`h-full flex-1 border-r border-white transition-all ${
-                i + 1 <= step ? "bg-primary" : "bg-slate-200"
+              className={`h-full flex-1 border-r border-surface transition-all ${
+                i + 1 <= step ? "bg-accent" : "bg-surface-elevated"
               }`}
             />
           ))}
@@ -187,16 +187,16 @@ export default function OnboardingWizardPageV3() {
       {/* STEP 1: COUNTRY & CURRENCY */}
       {step === 1 && (
         <div className="prosper-card p-8 space-y-6 animate-in fade-in duration-200">
-          <h2 className="text-2xl font-extrabold text-charcoal font-manrope">Step 1: Location & Base Currency</h2>
-          <p className="text-xs text-slate-500">Select your primary region to customize stock search and tax calculation defaults.</p>
+          <h2 className="text-2xl font-extrabold text-primary font-display">Step 1: Location & Base Currency</h2>
+          <p className="text-xs text-secondary-muted">Select your primary region to customize stock search and tax calculation defaults.</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {["India 🇮🇳", "United States 🇺🇸", "United Kingdom 🇬🇧", "Global 🌍"].map((c) => (
               <button
                 key={c}
                 onClick={() => setCountry(c)}
-                className={`p-4 rounded-xl border text-left font-bold text-xs transition-all ${
-                  country === c ? "border-primary bg-primary/5 text-primary shadow-xs" : "border-slate-200 text-slate-700 hover:border-slate-300"
+                className={`p-4 rounded-2xl border text-left font-bold text-xs transition-all ${
+                  country === c ? "border-accent bg-accent/10 text-primary shadow-xs" : "border-subtle text-secondary hover:border-accent/40"
                 }`}
               >
                 {c}
@@ -205,7 +205,7 @@ export default function OnboardingWizardPageV3() {
           </div>
 
           <div className="flex justify-end pt-4">
-            <button onClick={() => setStep(2)} className="px-6 py-2.5 bg-primary text-white font-extrabold text-xs rounded-xl flex items-center space-x-2">
+            <button onClick={() => setStep(2)} className="px-6 py-2.5 bg-accent text-accent-foreground font-extrabold text-xs rounded-full flex items-center space-x-2">
               <span>Next Step →</span>
             </button>
           </div>
@@ -496,27 +496,27 @@ export default function OnboardingWizardPageV3() {
       {/* STEP 10: ADD HOLDINGS & LAUNCH (WITH CSV IMPORT & ZERO DEFAULT STOCKS) */}
       {step === 10 && (
         <div className="prosper-card p-8 space-y-6 animate-in fade-in duration-200">
-          <h2 className="text-2xl font-extrabold text-charcoal font-manrope">Step 10: Add Initial Holdings & Finish</h2>
+          <h2 className="text-2xl font-extrabold text-primary font-display">Step 10: Add Initial Holdings & Finish</h2>
 
           {portfolioChoice === "manual" ? (
             <div className="space-y-6">
               {/* CSV Upload & Manual Input Toolbar */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="p-4 bg-surface-elevated/40 border border-subtle rounded-2xl space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-extrabold text-charcoal uppercase tracking-wider">Import Portfolio CSV</span>
+                  <span className="text-xs font-extrabold text-primary uppercase tracking-wider">Import Portfolio CSV</span>
                   <button
                     onClick={downloadSampleCSV}
                     type="button"
-                    className="text-[11px] text-primary hover:underline font-bold flex items-center space-x-1"
+                    className="text-[11px] text-accent hover:underline font-bold flex items-center space-x-1"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download Sample CSV Template</span>
                   </button>
                 </div>
 
-                <label className="flex items-center justify-center space-x-2 border-2 border-dashed border-primary/40 hover:border-primary bg-white p-4 rounded-xl cursor-pointer transition-all">
-                  <Upload className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-primary">Click to Upload Portfolio CSV (Symbol, Quantity, Price)</span>
+                <label className="flex items-center justify-center space-x-2 border-2 border-dashed border-accent/40 hover:border-accent bg-surface p-4 rounded-xl cursor-pointer transition-all">
+                  <Upload className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-bold text-accent">Click to Upload Portfolio CSV (Symbol, Quantity, Price)</span>
                   <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
                 </label>
               </div>
@@ -528,37 +528,37 @@ export default function OnboardingWizardPageV3() {
                   value={newStock}
                   onChange={(e) => setNewStock(e.target.value)}
                   placeholder="Stock Symbol (e.g. TATAMOTORS)"
-                  className="bg-slate-50 border rounded-lg p-2.5 text-xs font-bold sm:col-span-2"
+                  className="bg-surface-elevated border border-subtle rounded-xl p-2.5 text-xs font-bold text-primary sm:col-span-2 outline-none focus:ring-2 focus:ring-accent"
                 />
                 <input
                   type="number"
                   value={newQty}
                   onChange={(e) => setNewQty(Number(e.target.value))}
                   placeholder="Quantity"
-                  className="bg-slate-50 border rounded-lg p-2.5 text-xs font-bold"
+                  className="bg-surface-elevated border border-subtle rounded-xl p-2.5 text-xs font-bold text-primary outline-none focus:ring-2 focus:ring-accent"
                 />
-                <button onClick={addHolding} type="button" className="bg-primary text-white text-xs font-bold rounded-lg py-2.5 hover:bg-primary-dark transition-all">
+                <button onClick={addHolding} type="button" className="bg-accent text-accent-foreground text-xs font-bold rounded-full py-2.5 hover:opacity-90 transition-all">
                   + Add Stock
                 </button>
               </div>
 
               {/* Added Stock Holdings Table */}
               {holdings.length === 0 ? (
-                <div className="p-6 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center text-xs text-slate-500 font-bold">
+                <div className="p-6 bg-surface-elevated/40 border border-dashed border-subtle rounded-2xl text-center text-xs text-secondary-muted font-bold">
                   No stocks added yet. Enter a stock symbol above or upload a CSV file to import your portfolio.
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="text-xs font-bold text-slate-500 uppercase">Current Added Holdings ({holdings.length})</div>
+                  <div className="text-xs font-bold text-secondary-muted uppercase">Current Added Holdings ({holdings.length})</div>
                   {holdings.map((h, idx) => (
-                    <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex items-center justify-between text-xs font-bold text-charcoal">
-                      <span className="font-extrabold text-primary">{h.symbol}</span>
+                    <div key={idx} className="bg-surface-elevated/40 p-3 rounded-xl border border-subtle flex items-center justify-between text-xs font-bold text-primary">
+                      <span className="font-extrabold text-accent">{h.symbol}</span>
                       <span>Qty: {h.quantity}</span>
                       <span>Avg Price: ₹{h.price}</span>
                       <button
                         onClick={() => removeHolding(idx)}
                         type="button"
-                        className="text-slate-400 hover:text-negative p-1 transition-all"
+                        className="text-secondary-muted hover:text-negative p-1 transition-all"
                         title="Remove Stock"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -569,17 +569,17 @@ export default function OnboardingWizardPageV3() {
               )}
             </div>
           ) : (
-            <div className="p-6 bg-slate-50 rounded-xl text-xs text-slate-600 text-center font-bold">
+            <div className="p-6 bg-surface-elevated/40 rounded-2xl border border-subtle text-xs text-secondary text-center font-bold">
               Starting fresh with an empty portfolio (0 holdings). You can add holdings or upload a CSV anytime from the Portfolio tab!
             </div>
           )}
 
-          <div className="flex justify-between pt-4 border-t border-slate-200">
-            <button onClick={() => setStep(9)} className="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600">Back</button>
+          <div className="flex justify-between pt-4 border-t border-subtle">
+            <button onClick={() => setStep(9)} className="px-5 py-2 border border-subtle rounded-full text-xs font-bold text-secondary hover:text-primary">Back</button>
             <button
               onClick={handleFinish}
               disabled={saving}
-              className="px-8 py-3 bg-positive hover:bg-positive-light text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2"
+              className="px-8 py-3 bg-accent text-accent-foreground font-extrabold text-xs rounded-full shadow-md hover:opacity-90 transition-all flex items-center space-x-2"
             >
               <span>{saving ? "Saving..." : "FINISH & LAUNCH DASHBOARD →"}</span>
             </button>

@@ -3,6 +3,7 @@
 import React from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { PlainLanguageTooltip, FINANCIAL_TERMS } from "./PlainLanguageTooltip";
+import { BigNumber } from "./BigNumber";
 
 interface MetricCardProps {
   label: string;
@@ -14,6 +15,8 @@ interface MetricCardProps {
   icon?: React.ReactNode;
   isStale?: boolean;
   termKey?: keyof typeof FINANCIAL_TERMS;
+  sparkline?: number[];
+  variant?: "default" | "hero";
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
@@ -26,64 +29,83 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   icon,
   isStale = false,
   termKey,
+  variant = "default",
 }) => {
   const isPositive = typeof changePct === "number" && changePct > 0;
   const isNegative = typeof changePct === "number" && changePct < 0;
   const isZero = typeof changePct === "number" && changePct === 0;
 
   return (
-    <div className="prosper-card p-5 relative overflow-hidden">
-      <div className="flex items-center justify-between text-secondary mb-2">
-        <div className="flex items-center">
-          <span className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
-            {label}
-          </span>
-          {termKey && <PlainLanguageTooltip termKey={termKey} />}
+    <div className="prosper-card p-5 sm:p-6 relative overflow-hidden flex flex-col justify-between">
+      {/* Top Header: icon tile + label + tooltip */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2.5">
+          {icon && (
+            <div className="w-8 h-8 rounded-xl bg-surface-elevated text-secondary flex items-center justify-center shrink-0">
+              {icon}
+            </div>
+          )}
+          <div className="flex items-center">
+            <span className="text-xs font-medium text-secondary">
+              {label}
+            </span>
+            {termKey && <PlainLanguageTooltip termKey={termKey} />}
+          </div>
         </div>
-        {icon && <div className="text-slate-400 dark:text-slate-500">{icon}</div>}
-      </div>
 
-      <div className="flex items-baseline space-x-2">
-        <span className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display tabular-nums text-primary dark:text-white">
-          {value}
-        </span>
         {isStale && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-yellow/10 text-accent-yellow border border-accent-yellow/20 font-semibold">
             Stale
           </span>
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-xs">
+      {/* Headline Metric Value with BigNumber */}
+      <div className="my-1">
+        {typeof value === "string" && value.startsWith("₹") ? (
+          <BigNumber value={value} currency="₹" size="lg" />
+        ) : typeof value === "string" && value.startsWith("$") ? (
+          <BigNumber value={value} currency="$" size="lg" />
+        ) : (
+          <span className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display tabular-nums text-primary">
+            {value}
+          </span>
+        )}
+      </div>
+
+      {/* Bottom Footer: Pill delta or sublabel */}
+      <div className="mt-3 flex items-center justify-between text-xs pt-1">
         {typeof changePct === "number" ? (
-          <div
-            className={`flex items-center space-x-1 font-semibold tabular-nums ${
-              isPositive
-                ? "text-emerald-600 dark:text-emerald-400"
-                : isNegative
-                ? "text-rose-600 dark:text-rose-400"
-                : "text-slate-500 dark:text-slate-400"
-            }`}
-          >
-            {isPositive && <TrendingUp className="w-3.5 h-3.5" />}
-            {isNegative && <TrendingDown className="w-3.5 h-3.5" />}
-            {isZero && <Minus className="w-3.5 h-3.5" />}
-            <span>
-              {isPositive ? "+" : ""}
-              {changePct.toFixed(2)}%
+          <div className="flex items-center space-x-2">
+            <span
+              className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold tabular-nums ${
+                isPositive
+                  ? "bg-accent/10 text-accent border border-accent/20"
+                  : isNegative
+                  ? "bg-negative/10 text-negative border border-negative/20"
+                  : "bg-surface-elevated text-secondary border border-border-subtle"
+              }`}
+            >
+              {isPositive && <TrendingUp className="w-3 h-3" />}
+              {isNegative && <TrendingDown className="w-3 h-3" />}
+              {isZero && <Minus className="w-3 h-3" />}
+              <span>
+                {isPositive ? "+" : ""}
+                {changePct.toFixed(2)}%
+              </span>
             </span>
-            <span className="text-slate-400 dark:text-slate-500 font-normal">
-              ({changeLabel})
+            <span className="text-secondary-muted text-[11px]">
+              vs {changeLabel}
             </span>
           </div>
         ) : sublabel ? (
-          <span className="text-slate-500 dark:text-slate-400 font-medium">
+          <span className="text-secondary text-xs font-medium">
             {sublabel}
           </span>
         ) : <div />}
 
         {asOf && (
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] text-secondary-muted">
             {asOf}
           </span>
         )}
