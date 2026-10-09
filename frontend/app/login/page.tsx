@@ -3,15 +3,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
-import { loginUser, googleSignIn } from "@/lib/api";
+import { loginUser, registerUser, googleSignIn } from "@/lib/api";
 import { setStoredUser } from "@/lib/auth";
-import { Shield, ArrowRight, Lock, Mail, AlertCircle, RefreshCw } from "lucide-react";
+import { Shield, ArrowRight, Lock, Mail, AlertCircle, RefreshCw, Sparkles, X } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +39,35 @@ export default function LoginPage() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      let res = await loginUser("demo@prosperhigh.com", "DemoInvestor@2026");
+      if (!res.success) {
+        const regRes = await registerUser("Demo Investor", "demo@prosperhigh.com", "DemoInvestor@2026");
+        if (regRes.success) {
+          res = regRes;
+        }
+      }
+      if (res.success && res.user) {
+        setStoredUser(res.user);
+        window.location.href = "/";
+      } else {
+        setError(res.error || "Demo login unavailable");
+      }
+    } catch (err: any) {
+      setError(err.message || "Could not complete demo login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setError("");
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      setError("Google OAuth is enabled on backend. To activate browser popup, set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your frontend environment.");
+      setShowGoogleModal(true);
       return;
     }
 
@@ -74,7 +99,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-12 space-y-6">
+    <div className="max-w-md w-full mx-auto space-y-6">
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
 
       <div className="text-center space-y-2">
@@ -135,46 +160,110 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="relative flex py-2 items-center">
+        <div className="relative flex py-1 items-center">
           <div className="flex-grow border-t border-border-subtle"></div>
-          <span className="flex-shrink mx-3 text-[11px] text-secondary-muted font-bold uppercase tracking-wider">or continue with</span>
+          <span className="flex-shrink mx-3 text-[11px] text-secondary-muted font-bold uppercase tracking-wider">or</span>
           <div className="flex-grow border-t border-border-subtle"></div>
         </div>
 
+        {/* 1-Click Demo Investor Access */}
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={loading}
+          className="w-full py-2.5 px-4 bg-accent/10 hover:bg-accent/20 border border-accent/30 text-accent font-bold text-xs rounded-full transition-all flex items-center justify-center space-x-2"
+        >
+          <Sparkles className="w-4 h-4 text-accent" />
+          <span>Instant Demo Investor Access</span>
+        </button>
+
+        {/* Official Google Sign-In Button */}
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3 bg-surface border border-border-subtle hover:bg-surface-elevated text-primary font-bold text-xs rounded-full transition-all shadow-sm flex items-center justify-center space-x-2"
+          className="w-full py-2.5 px-4 bg-surface-elevated hover:bg-surface border border-border hover:border-border-subtle text-primary font-semibold text-xs rounded-full transition-all shadow-xs flex items-center justify-center space-x-3 group"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.37 7.34 24 12 24z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.98 0 12s.46 3.84 1.26 5.42l4.02-3.15z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.25 2.63 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-            />
-          </svg>
+          <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-xs shrink-0">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.37 7.34 24 12 24z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.98 0 12s.46 3.84 1.26 5.42l4.02-3.15z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.25 2.63 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+              />
+            </svg>
+          </div>
           <span>Sign In with Google</span>
         </button>
 
-        <div className="pt-4 border-t border-border-subtle text-center text-xs text-secondary-muted">
+        <div className="pt-3 border-t border-border-subtle text-center text-xs text-secondary-muted">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-accent font-bold hover:underline">
             Create Account Free
           </Link>
         </div>
       </div>
+
+      {/* Friendly Google OAuth Setup Guidance Modal */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-surface border border-border rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-accent/20 text-accent flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-accent" />
+                </div>
+                <h3 className="font-bold text-sm text-primary font-display">Google OAuth Configuration</h3>
+              </div>
+              <button
+                onClick={() => setShowGoogleModal(false)}
+                className="p-1.5 rounded-full hover:bg-surface-elevated text-secondary-muted hover:text-primary transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-secondary-muted leading-relaxed">
+              Google OAuth backend verification is ready. To activate the Google browser popup in your environment, add this variable to your frontend environment (<code className="text-primary font-mono text-[11px]">.env.local</code> or Vercel):
+            </p>
+
+            <div className="p-2.5 bg-background rounded-xl border border-border-subtle font-mono text-[10.5px] text-accent break-all select-all">
+              NEXT_PUBLIC_GOOGLE_CLIENT_ID
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowGoogleModal(false);
+                  handleDemoLogin();
+                }}
+                className="w-full py-2.5 bg-accent hover:bg-accent-hover text-black font-extrabold text-xs rounded-full shadow transition-all flex items-center justify-center space-x-2"
+              >
+                <Sparkles className="w-4 h-4 text-black" />
+                <span>Instant Demo Access</span>
+              </button>
+
+              <button
+                onClick={() => setShowGoogleModal(false)}
+                className="w-full py-2 text-xs font-semibold text-secondary-muted hover:text-primary"
+              >
+                Use Email &amp; Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,6 +26,7 @@ import {
   Menu,
   X,
   LogOut,
+  LogIn,
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
@@ -101,18 +102,33 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
   const sidebarContent = (
     <div
       className={`flex flex-col h-full justify-between bg-sidebar-bg text-sidebar-text border border-sidebar-border transition-all duration-300 ${
-        collapsed ? "w-20 rounded-3xl" : "w-64 rounded-3xl"
-      } shadow-2xl p-4`}
+        collapsed ? "w-20 rounded-3xl p-3" : "w-64 rounded-3xl p-4"
+      } shadow-2xl`}
     >
       <div className="space-y-4">
         {/* Brand Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-sidebar-border/60">
-          <Link href="/" className="flex items-center space-x-3 overflow-hidden">
-            {/* Geometric brand mark like Ref A/D */}
-            <div className="w-10 h-10 rounded-2xl bg-accent text-black flex items-center justify-center font-black font-display text-lg shadow-md shrink-0">
-              <Sparkles className="w-5 h-5 text-black" />
-            </div>
-            {!collapsed && (
+        {collapsed ? (
+          <div className="flex flex-col items-center gap-2 pb-2 border-b border-sidebar-border/60">
+            <Link href="/" className="flex items-center justify-center" title="ProsperHigh">
+              <div className="w-10 h-10 rounded-2xl bg-accent text-black flex items-center justify-center font-black font-display text-lg shadow-md shrink-0">
+                <Sparkles className="w-5 h-5 text-black" />
+              </div>
+            </Link>
+            <button
+              onClick={() => setCollapsed(false)}
+              className="p-1.5 rounded-full hover:bg-sidebar-surface text-sidebar-muted hover:text-white transition-colors"
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between pb-2 border-b border-sidebar-border/60">
+            <Link href="/" className="flex items-center space-x-3 overflow-hidden">
+              <div className="w-10 h-10 rounded-2xl bg-accent text-black flex items-center justify-center font-black font-display text-lg shadow-md shrink-0">
+                <Sparkles className="w-5 h-5 text-black" />
+              </div>
               <div className="flex flex-col truncate">
                 <span className="font-extrabold text-base tracking-tight font-display text-white leading-tight">
                   Prosper<span className="text-accent">High</span>
@@ -121,19 +137,19 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
                   Financial Intelligence
                 </span>
               </div>
-            )}
-          </Link>
+            </Link>
 
-          {/* Desktop Collapse Toggle */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex p-1.5 rounded-full hover:bg-sidebar-surface text-sidebar-muted hover:text-white transition-colors"
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-label="Toggle sidebar width"
-          >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
-        </div>
+            {/* Desktop Collapse Toggle */}
+            <button
+              onClick={() => setCollapsed(true)}
+              className="hidden md:flex p-1.5 rounded-full hover:bg-sidebar-surface text-sidebar-muted hover:text-white transition-colors"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Navigation Groups */}
         <nav className="space-y-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
@@ -151,14 +167,14 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center px-3.5 py-2.5 rounded-full text-xs font-semibold transition-all group ${
+                    className={`flex items-center rounded-2xl text-xs font-semibold transition-all group ${
                       isActive
                         ? "bg-white text-black font-extrabold shadow-sm"
                         : "text-sidebar-muted hover:text-white hover:bg-sidebar-surface"
-                    } ${collapsed ? "justify-center px-2" : "justify-between"}`}
+                    } ${collapsed ? "w-10 h-10 mx-auto justify-center p-0" : "px-3.5 py-2.5 justify-between"}`}
                     title={collapsed ? item.label : undefined}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className={`flex items-center ${collapsed ? "justify-center" : "space-x-3"}`}>
                       <Icon
                         className={`w-4 h-4 shrink-0 transition-colors ${
                           isActive
@@ -246,7 +262,7 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
           <div className="flex justify-center">
             <button
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-full hover:bg-sidebar-surface text-sidebar-muted hover:text-white transition-colors"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center bg-sidebar-surface hover:bg-white/10 text-sidebar-muted hover:text-white transition-colors"
               title="Toggle theme"
             >
               {resolvedTheme === "dark" ? <Sun className="w-4 h-4 text-accent-yellow" /> : <Moon className="w-4 h-4 text-white" />}
@@ -256,8 +272,8 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
 
         {/* User Chip + Round Logout Button (Ref B & D) */}
         {user ? (
-          <div className={`flex items-center justify-between p-2 rounded-2xl bg-sidebar-surface ${collapsed ? "justify-center" : ""}`}>
-            <Link href="/profile" className="flex items-center space-x-2.5 overflow-hidden">
+          <div className={`flex items-center justify-between p-2 rounded-2xl bg-sidebar-surface ${collapsed ? "flex-col gap-2 p-1.5" : ""}`}>
+            <Link href="/profile" className={`flex items-center ${collapsed ? "justify-center" : "space-x-2.5"} overflow-hidden`} title={user.name || "Profile"}>
               <div className="w-8 h-8 rounded-full bg-accent text-black flex items-center justify-center font-bold text-xs shrink-0">
                 {user.name ? user.name[0].toUpperCase() : "U"}
               </div>
@@ -273,7 +289,7 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
               )}
             </Link>
 
-            {!collapsed && (
+            {!collapsed ? (
               <div className="flex items-center space-x-1">
                 <Link
                   href="/settings"
@@ -291,15 +307,34 @@ export const Sidebar: React.FC<Props> = ({ onStartTour }) => {
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="p-1.5 rounded-full text-sidebar-muted hover:text-negative hover:bg-white/10 transition-colors"
+                title="Log out"
+                aria-label="Log out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
         ) : (
-          <Link
-            href="/login"
-            className="w-full py-2 bg-accent hover:bg-accent-hover text-black font-extrabold text-xs rounded-full shadow transition-all text-center block"
-          >
-            {collapsed ? "In" : "Sign In"}
-          </Link>
+          collapsed ? (
+            <Link
+              href="/login"
+              className="w-10 h-10 mx-auto bg-accent hover:bg-accent-hover text-black font-extrabold rounded-2xl shadow transition-all flex items-center justify-center"
+              title="Sign In"
+            >
+              <LogIn className="w-4 h-4 text-black" />
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="w-full py-2.5 bg-accent hover:bg-accent-hover text-black font-extrabold text-xs rounded-full shadow transition-all text-center block"
+            >
+              Sign In
+            </Link>
+          )
         )}
       </div>
     </div>
