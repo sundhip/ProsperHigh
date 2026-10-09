@@ -58,6 +58,12 @@ class User(Base):
     uploaded_documents: Mapped[List["Document"]] = relationship(
         "Document", back_populates="uploader"
     )
+    watchlist_items: Mapped[List["WatchlistItem"]] = relationship(
+        "WatchlistItem", back_populates="user", cascade="all, delete-orphan"
+    )
+    alerts: Mapped[List["UserAlert"]] = relationship(
+        "UserAlert", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class InvestorProfile(Base):
@@ -402,5 +408,39 @@ class InvestmentThesisRecord(Base):
 
     user: Mapped["User"] = relationship("User", back_populates="theses")
     analysis: Mapped[Optional["AnalysisHistory"]] = relationship("AnalysisHistory")
+
+
+class WatchlistItem(Base):
+    __tablename__ = "watchlist_items"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"WCH-{uuid.uuid4().hex[:8].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="watchlist_items")
+
+
+class UserAlert(Base):
+    __tablename__ = "user_alerts"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: f"ALT-{uuid.uuid4().hex[:8].upper()}")
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    symbol: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    alert_type: Mapped[str] = mapped_column(String(50), default="PRICE_TARGET", nullable=False)
+    condition_type: Mapped[str] = mapped_column(String(50), default="ABOVE", nullable=False)
+    threshold_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default="ACTIVE", nullable=False)
+    message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    triggered_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="alerts")
+
 
 

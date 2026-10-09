@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -8,35 +9,48 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#F7F8F5",
+        background: "var(--bg-app)",
+        surface: "var(--bg-surface)",
+        "surface-elevated": "var(--bg-surface-elevated)",
+        "border-subtle": "var(--border-subtle)",
+        "border-default": "var(--border-default)",
         primary: {
-          DEFAULT: "#1F3A4A",
+          DEFAULT: "var(--text-primary)",
+          navy: "#1F3A4A",
           dark: "#142631",
-          light: "#2C5168"
+          light: "#2C5168",
         },
         secondary: {
-          DEFAULT: "#4F7C7A",
-          light: "#6A9997"
+          DEFAULT: "var(--text-secondary)",
+          muted: "var(--text-muted)",
         },
         accent: {
           DEFAULT: "#C9A96E",
-          light: "#DFC593"
+          gold: "#D4AF37",
+          light: "#DFC593",
         },
         positive: {
-          DEFAULT: "#4F8A68",
-          light: "#6CA887"
+          DEFAULT: "#10B981",
+          light: "#34D399",
+          soft: "var(--positive-soft)",
         },
         warning: {
-          DEFAULT: "#C58B39",
-          light: "#DAA455"
+          DEFAULT: "#F59E0B",
+          light: "#FBBF24",
+          soft: "var(--warning-soft)",
         },
         negative: {
-          DEFAULT: "#B75D5D",
-          light: "#CC7A7A"
+          DEFAULT: "#EF4444",
+          light: "#F87171",
+          soft: "var(--negative-soft)",
         },
-        charcoal: "#1F2933",
-        panel: "#FFFFFF"
-      }
+        charcoal: "var(--text-primary)",
+        panel: "var(--bg-surface)",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-manrope)", "sans-serif"],
+      },
     }
   },
   plugins: []

@@ -115,15 +115,15 @@ export default function ResearchPageV2() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Citation-Backed Document Terminal & Reader
           </span>
           <h1 className="text-2xl font-extrabold text-charcoal font-manrope mt-1">
             Corporate Filings & Document RAG
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Query Annual Reports, exchange disclosures, and regulatory filings with exact passage citations.
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function ResearchPageV2() {
           <button
             onClick={() => setActiveTab("search")}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
-              activeTab === "search" ? "bg-primary text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              activeTab === "search" ? "bg-accent text-charcoal" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
             }`}
           >
             <Search className="w-3.5 h-3.5" />
@@ -146,7 +146,7 @@ export default function ResearchPageV2() {
                 loadHistory();
               }}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
-                activeTab === "history" ? "bg-primary text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                activeTab === "history" ? "bg-accent text-charcoal" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >
               <History className="w-3.5 h-3.5" />
@@ -159,7 +159,7 @@ export default function ResearchPageV2() {
               loadDocuments();
             }}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
-              activeTab === "documents" ? "bg-primary text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              activeTab === "documents" ? "bg-accent text-charcoal" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -254,25 +254,25 @@ export default function ResearchPageV2() {
           {result && (
             <div className="space-y-6 animate-in fade-in duration-200">
               {result.insufficient_evidence ? (
-                <div className="prosper-card p-6 border-l-4 border-l-amber-500 bg-amber-50/50 space-y-2">
-                  <div className="flex items-center space-x-2 text-amber-800 font-bold text-xs">
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <div className="prosper-card p-6 border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20 space-y-2">
+                  <div className="flex items-center space-x-2 text-amber-800 dark:text-amber-400 font-bold text-xs">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span>Insufficient Evidence in Official Filings</span>
                   </div>
-                  <p className="text-xs text-slate-800 leading-relaxed font-medium">
+                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
                     {result.answer}
                   </p>
                   {result.suggested_query && (
-                    <div className="text-[11px] text-amber-900 font-semibold bg-white/80 p-2.5 rounded-lg border border-amber-200">
+                    <div className="text-[11px] text-amber-900 dark:text-amber-300 font-semibold bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-amber-200 dark:border-amber-800">
                       💡 {result.suggested_query}
                     </div>
                   )}
-                  <span className="text-[10px] text-slate-500 block">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                     ProsperHigh will not fabricate claims without verifiable citation anchors.
                   </span>
                 </div>
               ) : (
-                <div className="prosper-card p-6 border-l-4 border-l-primary bg-slate-50 space-y-3">
+                <div className="prosper-card p-6 border-l-4 border-l-primary bg-slate-50 dark:bg-slate-800/40 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 text-primary font-bold text-xs">
                       <ShieldCheck className="w-4 h-4 text-accent" />
@@ -282,7 +282,7 @@ export default function ResearchPageV2() {
                       Confidence: {Math.round((result.retrieval_confidence || 0.85) * 100)}%
                     </span>
                   </div>
-                  <p className="text-xs text-slate-800 leading-relaxed font-medium">
+                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
                     {result.answer}
                   </p>
                 </div>
@@ -298,17 +298,17 @@ export default function ResearchPageV2() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {result.citations.map((cit: any, idx: number) => (
-                      <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5">
+                      <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-primary">{cit.document}</span>
-                          <span className="text-[10px] bg-slate-200 px-2 py-0.5 rounded font-bold">{cit.year}</span>
+                          <span className="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded font-bold">{cit.year}</span>
                         </div>
 
-                        <p className="text-xs text-slate-700 italic bg-white p-2.5 rounded-lg border border-slate-200/80">
+                        <p className="text-xs text-slate-700 dark:text-slate-300 italic bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800">
                           "{cit.snippet}"
                         </p>
 
-                        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200">
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800">
                           <span>Section: {cit.section}</span>
                           <span>Page {cit.page}</span>
                         </div>
@@ -358,7 +358,7 @@ export default function ResearchPageV2() {
                   <div
                     key={item.id}
                     onClick={() => applyPastQuery(item)}
-                    className="p-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 cursor-pointer transition-all space-y-1.5"
+                    className="p-4 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer transition-all space-y-1.5"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -369,7 +369,7 @@ export default function ResearchPageV2() {
                         {item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 line-clamp-2">{item.answer}</p>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">{item.answer}</p>
                     <div className="flex items-center space-x-2 text-[10px] text-slate-400 pt-1">
                       <span>{item.citations?.length || 0} citations</span>
                       <span>•</span>
@@ -393,20 +393,20 @@ export default function ResearchPageV2() {
         <div className="space-y-4">
           {/* Drive Integration Callout Banner */}
           {driveStatus && (
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div className="flex items-center space-x-2.5">
                 <HardDrive className="w-4 h-4 text-primary shrink-0" />
                 <div>
                   <span className="font-extrabold text-charcoal block">
                     Google Drive Integration: {driveStatus.status}
                   </span>
-                  <span className="text-[11px] text-slate-500">{driveStatus.message}</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">{driveStatus.message}</span>
                 </div>
               </div>
 
               <span
                 className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider self-start sm:self-auto ${
-                  driveStatus.enabled ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
+                  driveStatus.enabled ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 {driveStatus.enabled ? "Drive Connected" : "Optional Setup"}
@@ -420,17 +420,17 @@ export default function ResearchPageV2() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {documentsList.map((doc) => (
-                <div key={doc.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+                <div key={doc.id} className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-primary">{doc.company}</span>
-                    <span className="text-[10px] bg-slate-200 font-bold px-2 py-0.5 rounded">{doc.year}</span>
+                    <span className="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-2 py-0.5 rounded">{doc.year}</span>
                   </div>
                   <div className="text-xs font-extrabold text-charcoal">{doc.title}</div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
                     Type: {doc.document_type} {doc.reporting_period ? `• ${doc.reporting_period}` : ""}
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-200">
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800">
                     <span className="text-positive font-bold">{doc.chunk_count} semantic chunks</span>
                     <button
                       onClick={() => openDocumentReader(doc.id)}

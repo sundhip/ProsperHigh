@@ -29,6 +29,8 @@ from backend.api.routers import (
     research,
     jobs,
     goals,
+    watchlist,
+    alerts,
 )
 
 
@@ -187,4 +189,7 @@ app.include_router(analysis.router)
 app.include_router(research.router)
 app.include_router(jobs.router)
 app.include_router(goals.router)
+app.include_router(watchlist.router)
+app.include_router(alerts.router)
+
 

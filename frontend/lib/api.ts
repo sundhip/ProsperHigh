@@ -772,3 +772,138 @@ export async function getDriveStatus(): Promise<any> {
     return null;
   }
 }
+
+// ----------------------------------------------------
+// PHASE 6: WATCHLIST & ALERTS & MARKET INTELLIGENCE API
+// ----------------------------------------------------
+
+export async function getWatchlist(): Promise<{ items: any[]; total_count: number }> {
+  const user = getStoredUser();
+  if (!user) return { items: [], total_count: 0 };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/watchlist`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return { items: [], total_count: 0 };
+  } catch (err) {
+    return { items: [], total_count: 0 };
+  }
+}
+
+export async function addToWatchlist(symbol: string, notes?: string): Promise<any> {
+  const user = getStoredUser();
+  if (!user) throw new Error("Authentication required to manage watchlist.");
+
+  const res = await fetch(`${API_BASE}/api/watchlist`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ symbol: symbol.toUpperCase().trim(), notes }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to add symbol to watchlist.");
+  }
+  return await res.json();
+}
+
+export async function removeFromWatchlist(symbol: string): Promise<boolean> {
+  const user = getStoredUser();
+  if (!user) throw new Error("Authentication required to manage watchlist.");
+
+  const res = await fetch(`${API_BASE}/api/watchlist/${encodeURIComponent(symbol.toUpperCase().trim())}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  return res.ok;
+}
+
+export async function getAlerts(): Promise<{ alerts: any[]; active_count: number; triggered_count: number }> {
+  const user = getStoredUser();
+  if (!user) return { alerts: [], active_count: 0, triggered_count: 0 };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/alerts`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) return await res.json();
+    return { alerts: [], active_count: 0, triggered_count: 0 };
+  } catch (err) {
+    return { alerts: [], active_count: 0, triggered_count: 0 };
+  }
+}
+
+export async function createAlert(payload: {
+  symbol: string;
+  alert_type?: string;
+  condition_type?: string;
+  threshold_value?: number;
+  message?: string;
+}): Promise<any> {
+  const user = getStoredUser();
+  if (!user) throw new Error("Authentication required to configure alerts.");
+
+  const res = await fetch(`${API_BASE}/api/alerts`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to create alert.");
+  }
+  return await res.json();
+}
+
+export async function dismissAlert(alertId: string): Promise<any> {
+  const user = getStoredUser();
+  if (!user) throw new Error("Authentication required.");
+
+  const res = await fetch(`${API_BASE}/api/alerts/${encodeURIComponent(alertId)}/dismiss`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to dismiss alert.");
+  }
+  return await res.json();
+}
+
+export async function deleteAlert(alertId: string): Promise<boolean> {
+  const user = getStoredUser();
+  if (!user) throw new Error("Authentication required.");
+
+  const res = await fetch(`${API_BASE}/api/alerts/${encodeURIComponent(alertId)}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return res.ok;
+}
+
+export async function getMarketIntelligence(): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE}/api/market/intelligence`);
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function compareInstruments(symbols: string[]): Promise<any> {
+  try {
+    const q = symbols.map((s) => s.toUpperCase().trim()).join(",");
+    const res = await fetch(`${API_BASE}/api/market/compare?symbols=${encodeURIComponent(q)}`);
+    if (res.ok) return await res.json();
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+

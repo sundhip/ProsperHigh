@@ -3,20 +3,30 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStoredUser, UserSession } from "@/lib/auth";
-import { getPortfolio, getProfile } from "@/lib/api";
+import { getPortfolio, getProfile, getWatchlist, getMarketIntelligence } from "@/lib/api";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   TrendingUp,
-  ShieldAlert,
+  TrendingDown,
   PieChart as PieIcon,
   Sparkles,
   ArrowRight,
+  ShieldAlert,
   ShieldCheck,
   Activity,
   Layers,
   Search,
   BookOpen,
   PlusCircle,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Clock,
+  Compass,
+  Star,
+  ExternalLink
 } from "lucide-react";
 import {
   AreaChart,
@@ -30,333 +40,448 @@ import {
   Cell
 } from "recharts";
 
-export default function HomePageV3() {
+export default function DashboardPage() {
   const [user, setUser] = useState<UserSession | null>(null);
   const [portfolio, setPortfolio] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [marketIntel, setMarketIntel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const u = getStoredUser();
     setUser(u);
-    if (u) {
-      Promise.all([getPortfolio(u.id), getProfile(u.id)]).then(([portRes, profRes]) => {
-        setPortfolio(portRes);
-        setProfile(profRes);
+
+    const loadData = async () => {
+      try {
+        const intel = await getMarketIntelligence();
+        setMarketIntel(intel);
+
+        if (u) {
+          const [portRes, profRes, wlRes] = await Promise.all([
+            getPortfolio(u.id),
+            getProfile(u.id),
+            getWatchlist(),
+          ]);
+          setPortfolio(portRes);
+          setProfile(profRes);
+          setWatchlist(wlRes.items || []);
+        }
+      } catch (err) {
+        console.error("Dashboard data load error:", err);
+      } finally {
         setLoading(false);
-      });
-    } else {
-      setLoading(false);
-    }
+      }
+    };
+
+    loadData();
 
     const handleAuth = () => {
       const updated = getStoredUser();
       setUser(updated);
-      if (updated) getPortfolio(updated.id).then(setPortfolio);
+      if (updated) {
+        getPortfolio(updated.id).then(setPortfolio);
+        getWatchlist().then((r) => setWatchlist(r.items || []));
+      }
     };
     window.addEventListener("auth-changed", handleAuth);
     return () => window.removeEventListener("auth-changed", handleAuth);
   }, []);
 
-  const hasLocalProfile = typeof window !== "undefined" && localStorage.getItem("prosperhigh_local_profile") !== null;
-  const isProfileComplete = profile?.onboarding_completed || user?.hasCompletedOnboarding || hasLocalProfile;
-
   const hasHoldings = (portfolio?.holdings?.length || 0) > 0;
-  const perfData = hasHoldings
-    ? portfolio.holdings.map((h: any) => ({
-        date: h.symbol,
-        value: h.current_value ?? (h.quantity * h.current_price)
-      }))
-    : [];
-
-  const COLORS = ["#1F3A4A", "#4F7C7A", "#C9A96E", "#4F8A68", "#C58B39"];
+  const holdings = portfolio?.holdings || [];
 
   const sectorData = Object.entries(portfolio?.sector_exposure || {}).map(([name, val]) => ({
     name,
-    value: Number(val)
+    value: Number(val),
   }));
 
+  const SECTOR_COLORS = ["#1F3A4A", "#4F7C7A", "#C9A96E", "#10B981", "#3B82F6", "#8B5CF6", "#F59E0B"];
+
   // ==========================================
-  // UNAUTHENTICATED: MARKETING LANDING PAGE
+  // UNAUTHENTICATED: MARKETING / PREVIEW STATE
   // ==========================================
   if (!user) {
     return (
-      <div className="space-y-16 py-8">
-        <div className="text-center space-y-6 max-w-4xl mx-auto">
-          <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 text-primary px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span>Explainable Multi-Agent Investment Intelligence</span>
+      <div className="space-y-12 py-6">
+        <div className="text-center space-y-4 max-w-3xl mx-auto">
+          <div className="inline-flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-800 dark:text-slate-200">
+            <Sparkles className="w-3.5 h-3.5 text-[#C9A96E]" />
+            <span>Explainable Multi-Agent Financial Intelligence</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-charcoal tracking-tight font-manrope leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight font-display leading-tight">
             Understand Your Investments. <br />
-            <span className="text-primary">Understand Why.</span>
+            <span className="text-slate-600 dark:text-sky-400">Understand Why.</span>
           </h1>
 
-          <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            ProsperHigh combines live market data, portfolio risk analysis, financial research, and multi-agent AI reasoning to provide personalized, explainable investment insights.
+          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+            ProsperHigh combines verified corporate filings, real market data, portfolio risk analysis, and seven-agent deterministic AI reasoning into one cohesive platform.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
             <Link
               href="/signup"
-              className="w-full sm:w-auto px-8 py-4 bg-primary text-white font-extrabold text-sm rounded-xl hover:bg-primary-dark shadow-xl transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 dark:bg-sky-500 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-2"
             >
-              <span>Get Started Free</span>
+              <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/login"
-              className="w-full sm:w-auto px-8 py-4 bg-white text-slate-800 border border-slate-300 font-extrabold text-sm rounded-xl hover:bg-slate-50 transition-all text-center"
+              className="w-full sm:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl shadow-sm transition-all"
             >
-              Sign In to Your Account
+              Sign In
             </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="prosper-card p-6 border-t-4 border-t-primary">
-            <div className="p-3 bg-primary/10 text-primary rounded-xl w-fit mb-4">
-              <Layers className="w-6 h-6 text-accent" />
+        {/* Live Market Movers Preview */}
+        {marketIntel && (
+          <div className="prosper-card p-6 max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                  Active Market Movers
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Real prices from {marketIntel.provider || "NSE"} ({marketIntel.as_of})
+                </p>
+              </div>
+              <Link href="/market-intelligence" className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center space-x-1">
+                <span>View Full Market</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <h3 className="text-lg font-bold text-charcoal font-manrope">7 Domain Intelligence Agents</h3>
-            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              Market, Technical, News, Fundamental, Regulatory, Risk, and Synthesis agents evaluate stocks independently before reaching a decision.
-            </p>
-          </div>
 
-          <div className="prosper-card p-6 border-t-4 border-t-accent">
-            <div className="p-3 bg-accent/10 text-accent-dark rounded-xl w-fit mb-4">
-              <ShieldCheck className="w-6 h-6 text-accent" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(marketIntel.top_gainers || []).slice(0, 4).map((g: any) => (
+                <Link
+                  key={g.symbol}
+                  href={`/analyze?symbol=${g.symbol}`}
+                  className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white">{g.symbol}</div>
+                  <div className="text-sm font-extrabold font-mono text-slate-800 dark:text-slate-100 tabular-nums mt-1">₹{g.price}</div>
+                  <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">+{g.change_pct}%</div>
+                </Link>
+              ))}
             </div>
-            <h3 className="text-lg font-bold text-charcoal font-manrope">Personalized Risk Engine</h3>
-            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              Your investor risk profile (0-100 score), goals, and existing holdings determine suitability—producing different recommendations for different investors.
-            </p>
           </div>
-
-          <div className="prosper-card p-6 border-t-4 border-t-positive">
-            <div className="p-3 bg-positive/10 text-positive rounded-xl w-fit mb-4">
-              <BookOpen className="w-6 h-6 text-positive" />
-            </div>
-            <h3 className="text-lg font-bold text-charcoal font-manrope">Citation-Backed Research (RAG)</h3>
-            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              Every AI conclusion traces to verified source documents—annual reports, exchange filings, and corporate disclosures with page citations.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     );
   }
 
   // ==========================================
-  // STATE 1: NEW USER — ONBOARDING INCOMPLETE
-  // ==========================================
-  if (!isProfileComplete) {
-    return (
-      <div className="max-w-2xl mx-auto py-12 space-y-6 text-center">
-        <div className="prosper-card p-8 border-l-4 border-l-primary space-y-4">
-          <AlertCircle className="w-12 h-12 text-primary mx-auto" />
-          <h2 className="text-2xl font-extrabold text-charcoal font-manrope">
-            Welcome to ProsperHigh, {user.name}!
-          </h2>
-          <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-            Let's build your investor profile and financial context so ProsperHigh can calculate personalized portfolio analytics and health scores.
-          </p>
-          <Link
-            href="/onboarding"
-            className="inline-flex items-center space-x-2 px-8 py-3.5 bg-primary text-white font-extrabold text-xs rounded-xl shadow-lg hover:bg-primary-dark transition-all"
-          >
-            <span>Complete 10-Step Profile →</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // STATE 2: PROFILE COMPLETE — EMPTY PORTFOLIO
-  // ==========================================
-  if (portfolio?.holdings_count === 0 && !hasLocalProfile) {
-    return (
-      <div className="max-w-2xl mx-auto py-12 space-y-6 text-center">
-        <div className="prosper-card p-8 border-l-4 border-l-accent space-y-4">
-          <PlusCircle className="w-12 h-12 text-accent mx-auto" />
-          <h2 className="text-2xl font-extrabold text-charcoal font-manrope">
-            Your Investor Profile is Ready ({profile?.risk_category || "Balanced Growth"} • Score {profile?.risk_score || 62}/100)
-          </h2>
-          <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-            Portfolio intelligence becomes personalized once you add your stock holdings. Add your positions to enable real-time risk, concentration, and return calculations.
-          </p>
-          <Link
-            href="/portfolio"
-            className="inline-flex items-center space-x-2 px-8 py-3.5 bg-accent hover:bg-accent-light text-charcoal font-extrabold text-xs rounded-xl shadow-lg transition-all"
-          >
-            <span>Add Portfolio Holdings →</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // STATE 3: AUTHENTICATED ACTIVE DASHBOARD
+  // AUTHENTICATED COMMAND CENTER DASHBOARD
   // ==========================================
   return (
     <div className="space-y-6">
-      {/* 1. Top Calculated Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="prosper-card p-5">
-          <div className="text-xs font-semibold text-slate-500 uppercase">Total Portfolio Value</div>
-          <div className="text-2xl font-black text-charcoal font-manrope mt-1">
-            ₹{portfolio?.total_portfolio_value ? portfolio.total_portfolio_value.toLocaleString("en-IN") : "0"}
-          </div>
-          <div className="text-xs text-positive font-semibold mt-1 flex items-center space-x-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Formulas: Σ (Qty × Price)</span>
-          </div>
+      {/* Top Welcome & Health Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-display">
+            Investment Command Center
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Welcome back, {user.name || "Investor"}. Data fresh as of {marketIntel?.as_of || "UTC"}.
+          </p>
         </div>
 
-        <div className="prosper-card p-5">
-          <div className="text-xs font-semibold text-slate-500 uppercase">Overall Return %</div>
-          <div className={`text-2xl font-black font-manrope mt-1 ${portfolio?.return_percentage >= 0 ? "text-positive" : "text-negative"}`}>
-            {portfolio?.return_percentage >= 0 ? "+" : ""}{portfolio?.return_percentage || 0}%
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            P&L: ₹{portfolio?.profit_loss ? portfolio.profit_loss.toLocaleString("en-IN") : "0"}
-          </div>
-        </div>
-
-        <div className="prosper-card p-5">
-          <div className="text-xs font-semibold text-slate-500 uppercase">Calculated Risk Score</div>
-          <div className="text-2xl font-black text-primary font-manrope mt-1">
-            {profile?.risk_score || 62} / 100
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            Category: {profile?.risk_category || "Balanced Growth"}
-          </div>
-        </div>
-
-        <div className="prosper-card p-5">
-          <div className="text-xs font-semibold text-slate-500 uppercase">Portfolio Health Score</div>
-          <div className="text-2xl font-black text-accent font-manrope mt-1">
-            {portfolio?.health_score || 82} / 100
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            Diversification: {portfolio?.health_breakdown?.diversification || 85}%
-          </div>
+        <div className="flex items-center space-x-2">
+          <Link
+            href="/analyze"
+            className="px-3.5 py-2 bg-slate-900 dark:bg-sky-500 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center space-x-1.5"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>New Stock Investigation</span>
+          </Link>
+          <Link
+            href="/portfolio"
+            className="px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-all flex items-center space-x-1.5"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>Manage Holdings</span>
+          </Link>
         </div>
       </div>
 
-      {/* 2. ✦ ProsperHigh Daily Intelligence Briefing */}
-      <div className="prosper-card p-6 bg-slate-900 text-white border border-slate-800">
-        <div className="flex items-center space-x-2 text-accent text-xs font-extrabold uppercase tracking-wider mb-2">
-          <Sparkles className="w-4 h-4" />
-          <span>✦ ProsperHigh Daily Intelligence Briefing</span>
-        </div>
-        <h3 className="text-lg font-bold font-manrope mb-3">
-          Good morning, {user.name}. Here are the key insights for your portfolio today:
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-            <span className="font-bold text-accent">1. Concentration Risk</span>
-            <p className="text-slate-300 mt-1">Largest stock position represents significant portion of total portfolio value.</p>
+      {/* Loading Skeletons */}
+      {loading ? (
+        <CardSkeleton count={4} />
+      ) : (
+        <>
+          {/* Key Portfolio Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              label="Portfolio Value"
+              value={`₹${(portfolio?.total_value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+              changePct={portfolio?.day_change_pct ?? null}
+              changeLabel="1D Change"
+              asOf={marketIntel?.as_of}
+              icon={<PieIcon className="w-4 h-4" />}
+            />
+            <MetricCard
+              label="Total Cost Basis"
+              value={`₹${(portfolio?.total_cost || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+              sublabel={`${holdings.length} Active Positions`}
+              icon={<Layers className="w-4 h-4" />}
+            />
+            <MetricCard
+              label="Unrealized P&L"
+              value={`₹${(portfolio?.total_unrealized_pnl || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+              changePct={portfolio?.total_return_pct ?? null}
+              changeLabel="Total Return"
+              icon={<TrendingUp className="w-4 h-4" />}
+            />
+            <MetricCard
+              label="Portfolio Health"
+              value={portfolio?.health_score ? `${portfolio.health_score}/100` : "Good"}
+              sublabel={portfolio?.risk_level || "Balanced Risk"}
+              icon={<ShieldCheck className="w-4 h-4" />}
+            />
           </div>
-          <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-            <span className="font-bold text-emerald-400">2. Sector Allocation</span>
-            <p className="text-slate-300 mt-1">Holdings distributed across {portfolio?.sector_exposure ? Object.keys(portfolio.sector_exposure).length : 0} unique sectors.</p>
-          </div>
-          <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-            <span className="font-bold text-amber-400">3. Risk Alignment</span>
-            <p className="text-slate-300 mt-1">Portfolio volatility matches your {profile?.risk_category || "Balanced Growth"} profile.</p>
-          </div>
-        </div>
-      </div>
 
-      {/* 3. Performance Chart & Sector Allocation */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 prosper-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-charcoal font-manrope">Current Holdings Valuation</h3>
-              <p className="text-xs text-slate-500">Calculated from market data for your {portfolio?.holdings_count || 0} active positions.</p>
+          {/* Core Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Holdings & Asset Allocation (Left 2 cols) */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Active Holdings Summary */}
+              <div className="prosper-card p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                      Holdings & Allocation
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Top positions tracked across exchange feeds
+                    </p>
+                  </div>
+                  <Link
+                    href="/portfolio"
+                    className="text-xs font-bold text-slate-600 dark:text-sky-400 hover:underline flex items-center space-x-1"
+                  >
+                    <span>View All</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                {hasHoldings ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
+                          <th className="pb-2.5">Instrument</th>
+                          <th className="pb-2.5 text-right">Qty</th>
+                          <th className="pb-2.5 text-right">Avg Price</th>
+                          <th className="pb-2.5 text-right">Current Price</th>
+                          <th className="pb-2.5 text-right">Weight</th>
+                          <th className="pb-2.5 text-right">Unrealized P&L</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                        {holdings.slice(0, 5).map((h: any) => {
+                          const pnl = h.unrealized_pnl ?? 0;
+                          const pnlPct = h.unrealized_pnl_pct ?? 0;
+                          return (
+                            <tr key={h.symbol} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                              <td className="py-3">
+                                <Link
+                                  href={`/analyze?symbol=${h.symbol}`}
+                                  className="font-bold text-slate-900 dark:text-white hover:text-[#C9A96E] dark:hover:text-sky-400"
+                                >
+                                  {h.symbol}
+                                </Link>
+                                <span className="block text-[10px] text-slate-400">{h.sector || "General"}</span>
+                              </td>
+                              <td className="py-3 text-right font-mono tabular-nums text-slate-700 dark:text-slate-300">
+                                {h.quantity}
+                              </td>
+                              <td className="py-3 text-right font-mono tabular-nums text-slate-700 dark:text-slate-300">
+                                ₹{Number(h.average_price).toFixed(2)}
+                              </td>
+                              <td className="py-3 text-right font-mono tabular-nums text-slate-900 dark:text-white font-bold">
+                                ₹{Number(h.current_price).toFixed(2)}
+                              </td>
+                              <td className="py-3 text-right font-mono tabular-nums text-slate-600 dark:text-slate-400">
+                                {typeof h.weight_pct === "number" ? `${h.weight_pct.toFixed(1)}%` : "—"}
+                              </td>
+                              <td className="py-3 text-right font-mono tabular-nums">
+                                <span
+                                  className={`font-bold ${
+                                    pnl >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                                  }`}
+                                >
+                                  {pnl >= 0 ? "+" : ""}₹{pnl.toFixed(2)} ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(1)}%)
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No Holdings Recorded"
+                    description="Add securities or import transactions to begin calculating live portfolio health and allocation metrics."
+                    actionLabel="Add First Holding"
+                    actionHref="/portfolio"
+                  />
+                )}
+              </div>
+
+              {/* Sector Exposure Chart */}
+              {sectorData.length > 0 && (
+                <div className="prosper-card p-5">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display mb-1">
+                    Sector Diversification
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    Concentration risk calculated across portfolio weight
+                  </p>
+                  <div className="h-44 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={sectorData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={70}
+                          paddingAngle={3}
+                        >
+                          {sectorData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SECTOR_COLORS[index % SECTOR_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: any) => [`${Number(value).toFixed(1)}%`, "Exposure"]}
+                          contentStyle={{
+                            backgroundColor: "var(--bg-surface)",
+                            borderColor: "var(--border-subtle)",
+                            borderRadius: "0.5rem",
+                            fontSize: "12px"
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center mt-2">
+                    {sectorData.map((s, idx) => (
+                      <div key={s.name} className="flex items-center space-x-1.5 text-[11px] text-slate-600 dark:text-slate-400">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: SECTOR_COLORS[idx % SECTOR_COLORS.length] }} />
+                        <span>{s.name} ({s.value.toFixed(1)}%)</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: AI Attention & Watchlist */}
+            <div className="space-y-6">
+              {/* Watchlist Quick Peek */}
+              <div className="prosper-card p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Star className="w-4 h-4 text-[#C9A96E]" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                      Watchlist
+                    </h3>
+                  </div>
+                  <Link href="/watchlist" className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline">
+                    Manage
+                  </Link>
+                </div>
+
+                {watchlist.length > 0 ? (
+                  <div className="space-y-2">
+                    {watchlist.slice(0, 4).map((w: any) => (
+                      <div
+                        key={w.symbol}
+                        className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+                      >
+                        <div>
+                          <Link href={`/analyze?symbol=${w.symbol}`} className="font-bold text-xs text-slate-900 dark:text-white hover:underline">
+                            {w.symbol}
+                          </Link>
+                          <div className="text-[10px] text-slate-400">{w.name}</div>
+                        </div>
+                        {w.current_price && (
+                          <div className="text-right">
+                            <div className="text-xs font-mono font-bold text-slate-900 dark:text-white tabular-nums">₹{w.current_price}</div>
+                            {typeof w.change_pct === "number" && (
+                              <div className={`text-[10px] font-bold tabular-nums ${w.change_pct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                {w.change_pct >= 0 ? "+" : ""}{w.change_pct}%
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-xs text-slate-400">
+                    <p>No securities in watchlist.</p>
+                    <Link href="/watchlist" className="text-sky-600 dark:text-sky-400 font-bold mt-1 inline-block">
+                      Add benchmark stocks →
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Verified Statutory Filings Attention Feed */}
+              <div className="prosper-card p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                      Statutory Disclosures
+                    </h3>
+                  </div>
+                  <Link href="/research" className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline">
+                    Research Terminal
+                  </Link>
+                </div>
+
+                <div className="space-y-3">
+                  {(marketIntel?.recent_filings || []).slice(0, 3).map((f: any) => (
+                    <div key={f.id} className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                          {f.symbol}
+                        </span>
+                        <span className="text-[10px] text-slate-400">{f.reporting_period || "Statutory"}</span>
+                      </div>
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">
+                        {f.title}
+                      </h5>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[10px] text-slate-400">{f.source}</span>
+                        {f.source_url && (
+                          <a
+                            href={f.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 flex items-center space-x-0.5 hover:underline"
+                          >
+                            <span>Exchange URL</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-
-          <div className="h-64 w-full">
-            {!hasHoldings ? (
-              <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400 font-bold space-y-2 border border-dashed border-slate-200 rounded-xl p-6">
-                <span>No stock holdings recorded yet.</span>
-                <Link href="/portfolio" className="text-primary hover:underline font-extrabold">
-                  + Add holdings to view valuation breakdown &rarr;
-                </Link>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={perfData}>
-                  <defs>
-                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1F3A4A" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#1F3A4A" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" stroke="#94A3B8" fontSize={11} />
-                  <YAxis stroke="#94A3B8" fontSize={11} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, "Position Value"]} />
-                  <Area type="monotone" dataKey="value" stroke="#1F3A4A" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVal)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-
-        <div className="prosper-card p-6">
-          <h3 className="text-base font-bold text-charcoal font-manrope mb-4 flex items-center space-x-2">
-            <PieIcon className="w-5 h-5 text-primary" />
-            <span>Sector Exposure</span>
-          </h3>
-
-          <div className="h-60 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={sectorData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
-                  {sectorData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => [`${value}%`, "Sector Exposure"]} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Integrated Platform Navigation: Research & Decision Audit */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-        <Link
-          href="/research"
-          className="prosper-card p-5 border-l-4 border-l-primary hover:border-slate-300 transition-all flex items-center justify-between group"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider">Citation-Backed RAG</span>
-            <h4 className="text-sm font-bold text-charcoal font-manrope">Exchange Filings & Document Terminal</h4>
-            <p className="text-xs text-slate-500">Query statutory annual reports and disclosures with verified page citations.</p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-        </Link>
-
-        <Link
-          href="/history"
-          className="prosper-card p-5 border-l-4 border-l-accent hover:border-slate-300 transition-all flex items-center justify-between group"
-        >
-          <div className="space-y-1">
-            <span className="text-[10px] font-extrabold text-accent uppercase tracking-wider">Auditability & Governance</span>
-            <h4 className="text-sm font-bold text-charcoal font-manrope">Decision History & Thesis Evolution</h4>
-            <p className="text-xs text-slate-500">Inspect past multi-agent analyses, agent signal breakdowns, and confidence logs.</p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-accent group-hover:translate-x-1 transition-all" />
-        </Link>
-      </div>
+        </>
+      )}
     </div>
   );
 }

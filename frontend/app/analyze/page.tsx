@@ -232,18 +232,18 @@ function AnalyzeContentV3() {
 
           {/* Warnings & Uncertainty Callout */}
           {((analysis.warnings && analysis.warnings.length > 0) || analysis.uncertainty) && (
-            <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1.5 text-xs text-amber-900">
-              <div className="flex items-center space-x-2 font-bold text-amber-800">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <div className="p-4 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/50 rounded-xl space-y-1.5 text-xs text-amber-900 dark:text-amber-300">
+              <div className="flex items-center space-x-2 font-bold text-amber-800 dark:text-amber-400">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Synthesis Warnings & Model Uncertainty</span>
               </div>
               {analysis.uncertainty && (
-                <p className="text-[11px] text-amber-800 font-medium">
+                <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
                   <strong>Uncertainty Profile:</strong> {analysis.uncertainty}
                 </p>
               )}
               {analysis.warnings?.map((w: string, idx: number) => (
-                <div key={idx} className="text-[11px] text-amber-700 flex items-center space-x-1">
+                <div key={idx} className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center space-x-1">
                   <span>•</span>
                   <span>{w}</span>
                 </div>
@@ -260,7 +260,7 @@ function AnalyzeContentV3() {
               </h3>
               <ul className="space-y-2">
                 {analysis.positive_factors?.map((fact: string, idx: number) => (
-                  <li key={idx} className="text-xs text-slate-800 bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200/60 font-medium">
+                  <li key={idx} className="text-xs text-slate-800 dark:text-slate-200 bg-emerald-50/50 dark:bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 font-medium">
                     ✓ {fact}
                   </li>
                 ))}
@@ -274,7 +274,7 @@ function AnalyzeContentV3() {
               </h3>
               <ul className="space-y-2">
                 {analysis.negative_factors?.map((fact: string, idx: number) => (
-                  <li key={idx} className="text-xs text-slate-800 bg-red-50/50 p-2.5 rounded-lg border border-red-200/60 font-medium">
+                  <li key={idx} className="text-xs text-slate-800 dark:text-slate-200 bg-red-50/50 dark:bg-red-950/20 p-2.5 rounded-lg border border-red-200/60 dark:border-red-800/40 font-medium">
                     ✕ {fact}
                   </li>
                 ))}
