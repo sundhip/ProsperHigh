@@ -1,6 +1,6 @@
 import os
 from typing import List, Union
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "text"  # "text" or "json"
+    TRUSTED_PROXIES: str = "127.0.0.1"
 
     # Database & Connection Pooling
     DATABASE_URL: str = "sqlite:///./prosperhigh.db"
@@ -49,6 +51,18 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        if self.ENVIRONMENT == "production":
+            insecure_dev_key = "dev-secret-key-change-this-in-production-to-a-secure-random-32char-token"
+            if self.JWT_SECRET_KEY == insecure_dev_key or len(self.JWT_SECRET_KEY) < 32:
+                raise ValueError(
+                    "FATAL SECURITY MISCONFIGURATION: In production mode, JWT_SECRET_KEY must be a "
+                    "cryptographically secure secret with at least 32 characters. "
+                    "Cannot use the default development secret key."
+                )
+        return self
 
     # AI Model Providers & Cost Controls
     PRIMARY_LLM_PROVIDER: str = "gemini"

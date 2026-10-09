@@ -24,6 +24,7 @@ def trigger_background_ingest(current_user: User = Depends(get_current_user)):
         fn=_run_ingest_job,
         idempotency_key="DEFAULT_INGESTION",
         max_retries=2,
+        user_id=current_user.id,
     )
     return {
         "message": "Document ingestion job queued.",
@@ -33,8 +34,8 @@ def trigger_background_ingest(current_user: User = Depends(get_current_user)):
 
 @router.get("/{job_id}")
 def get_job_status(job_id: str, current_user: User = Depends(get_current_user)):
-    """Retrieves status and progress of a background job."""
-    job = job_manager.get_job(job_id)
+    """Retrieves status and progress of a background job with user ownership verification."""
+    job = job_manager.get_job(job_id, user_id=current_user.id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found.")
     return job.to_dict()
@@ -42,5 +43,5 @@ def get_job_status(job_id: str, current_user: User = Depends(get_current_user)):
 
 @router.get("", response_model=List[Dict[str, Any]])
 def list_jobs(current_user: User = Depends(get_current_user)):
-    """Lists recent background jobs."""
-    return job_manager.list_jobs()
+    """Lists recent background jobs for the authenticated user."""
+    return job_manager.list_jobs(user_id=current_user.id)

@@ -1,3 +1,5 @@
+import json
+from datetime import datetime, timezone
 import logging
 import sys
 from contextvars import ContextVar
@@ -14,11 +16,29 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
+class JsonLogFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "request_id": getattr(record, "request_id", "-"),
+            "logger": record.name,
+            "message": record.getMessage(),
+            "environment": settings.ENVIRONMENT,
+        }
+        if record.exc_info:
+            log_entry["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_entry)
+
+
 def setup_logging():
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
-    log_format = "%(asctime)s [%(levelname)s] [req:%(request_id)s] %(name)s: %(message)s"
-    formatter = logging.Formatter(log_format)
+    if settings.LOG_FORMAT == "json":
+        formatter = JsonLogFormatter()
+    else:
+        log_format = "%(asctime)s [%(levelname)s] [req:%(request_id)s] %(name)s: %(message)s"
+        formatter = logging.Formatter(log_format)
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)

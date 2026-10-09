@@ -58,9 +58,16 @@ class PortfolioService:
         else:
             port = self.get_or_create_default_portfolio(db, user_id)
 
-        rows = db.query(Holding).filter(
-            (Holding.portfolio_id == port.id) | (Holding.user_id == user_id)
-        ).all()
+        if port.is_default:
+            rows = db.query(Holding).filter(
+                Holding.user_id == user_id,
+                (Holding.portfolio_id == port.id) | (Holding.portfolio_id.is_(None))
+            ).all()
+        else:
+            rows = db.query(Holding).filter(
+                Holding.user_id == user_id,
+                Holding.portfolio_id == port.id
+            ).all()
 
         holdings = []
         total_value = 0.0

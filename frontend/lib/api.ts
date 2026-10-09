@@ -907,3 +907,19 @@ export async function compareInstruments(symbols: string[]): Promise<any> {
   }
 }
 
+export async function logoutUser(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/api/auth/logout`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+  } catch (err) {
+    // Graceful handling of network disconnect during signout
+  } finally {
+    clearStoredUser();
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }
+}
+

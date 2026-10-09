@@ -11,6 +11,7 @@ Implements:
 """
 import uuid
 from typing import Dict, Any, List, Optional
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc, or_
 
@@ -209,13 +210,22 @@ class RAGService:
             if close_session:
                 db.close()
 
-    def get_document_detail(self, document_id: str, db: Session) -> Optional[Dict[str, Any]]:
+    def get_document_detail(self, document_id: str, db: Session, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Fetches full document metadata and chunk breakdown for the Document Reader.
+        Strictly enforces multi-tenant access control for user-uploaded documents.
         """
         doc = db.query(Document).filter(Document.id == document_id).first()
         if not doc:
             return None
+
+        # Multi-tenant isolation: check ownership if user-uploaded
+        if doc.is_user_uploaded:
+            if not user_id or doc.user_id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden: You cannot access another user's private uploaded document."
+                )
 
         chunks = (
             db.query(DocumentChunk)
@@ -271,15 +281,22 @@ class RAGService:
             ],
         }
 
-    def inspect_citation(self, chunk_id: str, db: Session) -> Optional[Dict[str, Any]]:
+    def inspect_citation(self, chunk_id: str, db: Session, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Validates and returns exact passage and verified source anchors for a citation.
+        Strictly enforces multi-tenant access control if the underlying document is user-uploaded.
         """
         chunk = db.query(DocumentChunk).filter(DocumentChunk.id == chunk_id).first()
         if not chunk:
             return None
 
         doc = chunk.document
+        if doc and doc.is_user_uploaded:
+            if not user_id or doc.user_id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden: You cannot access citations from another user's private uploaded document."
+                )
         return {
             "chunk_id": chunk.id,
             "document_id": doc.id,

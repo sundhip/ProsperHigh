@@ -78,8 +78,10 @@ def get_document_by_id(
 ):
     """
     Retrieve full document metadata, version history, and chunk text for the Document Reader.
+    Enforces user isolation for private uploaded documents.
     """
-    detail = rag_service.get_document_detail(document_id=document_id, db=db)
+    user_id = current_user.id if current_user else None
+    detail = rag_service.get_document_detail(document_id=document_id, db=db, user_id=user_id)
     if not detail:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -91,12 +93,15 @@ def get_document_by_id(
 @router.get("/citations/{chunk_id}", response_model=CitationInspectionResponse)
 def inspect_citation(
     chunk_id: str,
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
     Validate and inspect supporting citation passage, page, section, and verified source anchors.
+    Enforces user isolation for private uploaded document citations.
     """
-    inspection = rag_service.inspect_citation(chunk_id=chunk_id, db=db)
+    user_id = current_user.id if current_user else None
+    inspection = rag_service.inspect_citation(chunk_id=chunk_id, db=db, user_id=user_id)
     if not inspection:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

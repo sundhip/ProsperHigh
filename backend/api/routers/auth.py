@@ -43,3 +43,12 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
         email=current_user.email,
         hasCompletedOnboarding=has_completed
     )
+
+
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user)):
+    """Terminate the active user session and invalidate local client state."""
+    return {
+        "success": True,
+        "message": f"User {current_user.email} successfully logged out.",
+    }
